@@ -1,19 +1,39 @@
 import { Plus, Flame, Leaf } from 'lucide-react';
-import { MenuItem } from '@/data/menuData';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import { getImageForDish } from '@/lib/foodImages';
+
+export interface FoodCardItem {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  category: string;
+  ingredients: string[];
+  image_url?: string | null;
+  is_popular?: boolean | null;
+  is_vegetarian?: boolean | null;
+  spice_level?: number | null;
+}
 
 interface FoodCardProps {
-  item: MenuItem;
+  item: FoodCardItem;
 }
 
 const FoodCard = ({ item }: FoodCardProps) => {
   const { addToCart } = useCart();
 
   const handleAddToCart = () => {
-    addToCart(item);
+    addToCart({
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      description: item.description || '',
+      category: item.category,
+      ingredients: item.ingredients,
+    });
     toast.success(`${item.name} added to cart!`, {
       description: `KSh ${item.price.toLocaleString()}`,
     });
@@ -23,7 +43,7 @@ const FoodCard = ({ item }: FoodCardProps) => {
     return `KSh ${price.toLocaleString()}`;
   };
 
-  const getSpiceIndicator = (level?: 1 | 2 | 3) => {
+  const getSpiceIndicator = (level?: number | null) => {
     if (!level) return null;
     return (
       <div className="flex items-center gap-0.5">
@@ -34,24 +54,35 @@ const FoodCard = ({ item }: FoodCardProps) => {
     );
   };
 
+  // Get image from either database URL or local assets
+  const imageUrl = item.image_url || getImageForDish(item.name);
+
   return (
     <div className="group bg-card rounded-2xl overflow-hidden border border-border card-hover">
       {/* Image Container */}
       <div className="relative h-48 bg-gradient-to-br from-primary/10 to-accent/10 overflow-hidden">
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-6xl opacity-80 group-hover:scale-110 transition-transform duration-300">
-            🍽️
-          </span>
-        </div>
+        {imageUrl ? (
+          <img 
+            src={imageUrl} 
+            alt={item.name}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-6xl opacity-80 group-hover:scale-110 transition-transform duration-300">
+              🍽️
+            </span>
+          </div>
+        )}
         
         {/* Badges */}
         <div className="absolute top-3 left-3 flex flex-wrap gap-2">
-          {item.isPopular && (
+          {item.is_popular && (
             <Badge variant="default" className="bg-accent text-accent-foreground">
               Popular
             </Badge>
           )}
-          {item.isVegetarian && (
+          {item.is_vegetarian && (
             <Badge variant="secondary" className="bg-secondary text-secondary-foreground">
               <Leaf className="h-3 w-3 mr-1" />
               Veg
@@ -73,7 +104,7 @@ const FoodCard = ({ item }: FoodCardProps) => {
       <div className="p-4">
         <div className="flex items-start justify-between gap-2 mb-2">
           <h3 className="font-display text-lg font-semibold leading-tight">{item.name}</h3>
-          {getSpiceIndicator(item.spiceLevel)}
+          {getSpiceIndicator(item.spice_level)}
         </div>
 
         <p className="text-sm text-muted-foreground mb-3 line-clamp-2">

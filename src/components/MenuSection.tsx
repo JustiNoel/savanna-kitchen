@@ -1,18 +1,46 @@
-import { useState } from 'react';
-import { menuItems, categories } from '@/data/menuData';
-import FoodCard from './FoodCard';
+import { useState, useEffect } from 'react';
+import { useMenuItems } from '@/hooks/useMenuItems';
+import { menuItems as fallbackMenuItems, categories } from '@/data/menuData';
+import FoodCard, { FoodCardItem } from './FoodCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
+import { Search, Loader2 } from 'lucide-react';
 
 const MenuSection = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const { data: dbMenuItems, isLoading, error } = useMenuItems();
+
+  // Use database items if available, otherwise fallback to static data
+  const menuItems: FoodCardItem[] = dbMenuItems && dbMenuItems.length > 0 
+    ? dbMenuItems.map(item => ({
+        id: item.id,
+        name: item.name,
+        description: item.description,
+        price: item.price,
+        category: item.category,
+        ingredients: item.ingredients || [],
+        image_url: item.image_url,
+        is_popular: item.is_popular,
+        is_vegetarian: item.is_vegetarian,
+        spice_level: item.spice_level,
+      }))
+    : fallbackMenuItems.map(item => ({
+        id: item.id,
+        name: item.name,
+        description: item.description,
+        price: item.price,
+        category: item.category,
+        ingredients: item.ingredients,
+        is_popular: item.isPopular,
+        is_vegetarian: item.isVegetarian,
+        spice_level: item.spiceLevel,
+      }));
 
   const filteredItems = menuItems.filter((item) => {
     const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (item.description?.toLowerCase().includes(searchQuery.toLowerCase())) ||
       item.ingredients.some(ing => ing.toLowerCase().includes(searchQuery.toLowerCase()));
     return matchesCategory && matchesSearch;
   });
@@ -60,14 +88,21 @@ const MenuSection = () => {
           ))}
         </div>
 
+        {/* Loading State */}
+        {isLoading && (
+          <div className="flex justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        )}
+
         {/* Menu Grid */}
-        {filteredItems.length > 0 ? (
+        {!isLoading && filteredItems.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredItems.map((item) => (
               <FoodCard key={item.id} item={item} />
             ))}
           </div>
-        ) : (
+        ) : !isLoading && (
           <div className="text-center py-12">
             <p className="text-2xl mb-2">🔍</p>
             <p className="text-muted-foreground">No dishes found matching your search.</p>
@@ -75,9 +110,11 @@ const MenuSection = () => {
         )}
 
         {/* Results Count */}
-        <div className="text-center mt-8 text-muted-foreground">
-          Showing {filteredItems.length} of {menuItems.length} dishes
-        </div>
+        {!isLoading && (
+          <div className="text-center mt-8 text-muted-foreground">
+            Showing {filteredItems.length} of {menuItems.length} dishes
+          </div>
+        )}
       </div>
     </section>
   );

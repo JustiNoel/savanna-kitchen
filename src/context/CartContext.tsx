@@ -1,13 +1,21 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { MenuItem } from '@/data/menuData';
 
-interface CartItem extends MenuItem {
+export interface CartItemInput {
+  id: string;
+  name: string;
+  price: number;
+  description?: string;
+  category?: string;
+  ingredients?: string[];
+}
+
+interface CartItem extends CartItemInput {
   quantity: number;
 }
 
 interface CartContextType {
   items: CartItem[];
-  addToCart: (item: MenuItem) => void;
+  addToCart: (item: CartItemInput) => void;
   removeFromCart: (itemId: string) => void;
   updateQuantity: (itemId: string, quantity: number) => void;
   clearCart: () => void;
@@ -20,7 +28,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [items, setItems] = useState<CartItem[]>([]);
 
-  const addToCart = useCallback((item: MenuItem) => {
+  const addToCart = useCallback((item: CartItemInput) => {
     setItems((prev) => {
       const existing = prev.find((i) => i.id === item.id);
       if (existing) {
