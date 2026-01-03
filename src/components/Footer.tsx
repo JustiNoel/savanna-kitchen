@@ -32,7 +32,7 @@ const Footer = () => {
               </li>
               <li className="flex items-center gap-3 text-background/70 text-sm">
                 <Mail className="h-4 w-4 text-primary flex-shrink-0" />
-                <span>hello@savannakitchen.co.ke</span>
+                <span>justinoel254@gmail.com</span>
               </li>
             </ul>
           </div>
@@ -89,7 +89,7 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className="mt-12 pt-8 border-t border-background/10 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-background/50 text-sm">
-            © 2024 Savanna Kitchen. All rights reserved.
+            © 2026 Savanna Kitchen. All rights reserved.
           </p>
           <div className="flex items-center gap-4">
             <span className="text-2xl">🇰🇪</span>
