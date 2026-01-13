@@ -14,6 +14,69 @@ export type Database = {
   }
   public: {
     Tables: {
+      loyalty_points: {
+        Row: {
+          created_at: string
+          id: string
+          points: number
+          total_earned: number
+          total_redeemed: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          points?: number
+          total_earned?: number
+          total_redeemed?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          points?: number
+          total_earned?: number
+          total_redeemed?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      loyalty_transactions: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          points: number
+          reference_id: string | null
+          source: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          points: number
+          reference_id?: string | null
+          source: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          points?: number
+          reference_id?: string | null
+          source?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       menu_items: {
         Row: {
           category: string
@@ -266,6 +329,45 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      weekly_specials: {
+        Row: {
+          created_at: string
+          discount_percentage: number
+          discounted_price: number
+          end_date: string
+          id: string
+          is_active: boolean
+          menu_item_id: string
+          menu_item_name: string
+          original_price: number
+          start_date: string
+        }
+        Insert: {
+          created_at?: string
+          discount_percentage: number
+          discounted_price: number
+          end_date: string
+          id?: string
+          is_active?: boolean
+          menu_item_id: string
+          menu_item_name: string
+          original_price: number
+          start_date: string
+        }
+        Update: {
+          created_at?: string
+          discount_percentage?: number
+          discounted_price?: number
+          end_date?: string
+          id?: string
+          is_active?: boolean
+          menu_item_id?: string
+          menu_item_name?: string
+          original_price?: number
+          start_date?: string
         }
         Relationships: []
       }
