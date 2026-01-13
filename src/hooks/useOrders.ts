@@ -57,6 +57,7 @@ export const useCreateOrder = () => {
       items: Array<{ id: string; name: string; price: number; quantity: number }>;
       totalAmount: number;
       notes?: string;
+      paymentMethod?: string;
     }) => {
       if (!user) throw new Error('Must be logged in to place an order');
       
@@ -69,6 +70,7 @@ export const useCreateOrder = () => {
           notes: orderData.notes,
           status: 'pending',
           payment_status: 'pending',
+          payment_method: orderData.paymentMethod || 'pending',
         })
         .select()
         .single();

@@ -1,26 +1,32 @@
+import { useState } from 'react';
 import { Minus, Plus, Trash2, ShoppingBag, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { useCreateOrder } from '@/hooks/useOrders';
+import { useAddLoyaltyPoints } from '@/hooks/useLoyaltyPoints';
 import { Button } from '@/components/ui/button';
 import { SheetHeader, SheetTitle, SheetClose } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { getImageForDish } from '@/lib/foodImages';
 import { supabase } from '@/integrations/supabase/client';
+import PaymentMethodDialog from './PaymentMethodDialog';
 
 const CartSheet = () => {
   const navigate = useNavigate();
   const { items, updateQuantity, removeFromCart, totalPrice, clearCart } = useCart();
   const { user } = useAuth();
   const createOrder = useCreateOrder();
+  const addPoints = useAddLoyaltyPoints();
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const formatPrice = (price: number) => {
     return `KSh ${price.toLocaleString()}`;
   };
 
-  const sendOrderNotification = async (orderId: string, customerEmail: string, customerName: string) => {
+  const sendOrderNotification = async (orderId: string, customerEmail: string, customerName: string, paymentMethod: string) => {
     try {
       const { error } = await supabase.functions.invoke('send-notification', {
         body: {
@@ -35,6 +41,7 @@ const CartSheet = () => {
               price: item.price,
             })),
             totalAmount: Math.round(totalPrice * 1.1),
+            paymentMethod,
           },
         },
       });
@@ -47,13 +54,19 @@ const CartSheet = () => {
     }
   };
 
-  const handleCheckout = async () => {
+  const handleCheckoutClick = () => {
     if (!user) {
       toast.error('Please sign in to place an order');
       navigate('/auth');
       return;
     }
+    setShowPaymentDialog(true);
+  };
 
+  const handleConfirmOrder = async (paymentMethod: string) => {
+    if (!user) return;
+
+    setIsProcessing(true);
     try {
       const order = await createOrder.mutateAsync({
         items: items.map(item => ({
@@ -63,21 +76,41 @@ const CartSheet = () => {
           quantity: item.quantity,
         })),
         totalAmount: Math.round(totalPrice * 1.1),
+        paymentMethod,
       });
+      
+      // Award loyalty points (1 point per KSh 10 spent)
+      const pointsEarned = Math.floor(totalPrice / 10);
+      if (pointsEarned > 0) {
+        try {
+          await addPoints.mutateAsync({
+            points: pointsEarned,
+            source: 'order',
+            referenceId: order.id,
+            description: `Earned ${pointsEarned} points from order`,
+          });
+        } catch (pointsError) {
+          console.error('Failed to add loyalty points:', pointsError);
+        }
+      }
       
       // Send email notification
       await sendOrderNotification(
         order.id,
         user.email || '',
-        user.user_metadata?.full_name || user.email?.split('@')[0] || 'Customer'
+        user.user_metadata?.full_name || user.email?.split('@')[0] || 'Customer',
+        paymentMethod
       );
       
       clearCart();
+      setShowPaymentDialog(false);
       toast.success('Order placed successfully!', {
-        description: 'You will receive a confirmation email shortly.',
+        description: `Payment method: ${paymentMethod.replace('_', ' ').toUpperCase()}. You earned ${pointsEarned} loyalty points!`,
       });
     } catch (error) {
       toast.error('Failed to place order. Please try again.');
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -169,16 +202,16 @@ const CartSheet = () => {
             <Button 
               className="w-full" 
               size="lg" 
-              onClick={handleCheckout}
-              disabled={createOrder.isPending}
+              onClick={handleCheckoutClick}
+              disabled={createOrder.isPending || isProcessing}
             >
-              {createOrder.isPending ? (
+              {createOrder.isPending || isProcessing ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  Placing Order...
+                  Processing...
                 </>
               ) : (
-                'Place Order'
+                'Proceed to Payment'
               )}
             </Button>
           </SheetClose>
@@ -193,6 +226,14 @@ const CartSheet = () => {
           </p>
         )}
       </div>
+
+      <PaymentMethodDialog
+        open={showPaymentDialog}
+        onOpenChange={setShowPaymentDialog}
+        onConfirm={handleConfirmOrder}
+        isLoading={isProcessing}
+        totalAmount={Math.round(totalPrice * 1.1)}
+      />
     </div>
   );
 };
