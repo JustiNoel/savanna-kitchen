@@ -15,7 +15,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { ArrowLeft, Plus, Pencil, Trash2, Loader2, ShoppingBag, CalendarDays, UtensilsCrossed } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, Loader2, ShoppingBag, CalendarDays, UtensilsCrossed, Sparkles, Trophy, Users } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 interface MenuItemForm {
   name: string;
@@ -28,6 +29,17 @@ interface MenuItemForm {
   is_vegetarian: boolean;
   spice_level: string;
   is_available: boolean;
+}
+
+interface WeeklySpecialForm {
+  menu_item_id: string;
+  menu_item_name: string;
+  original_price: string;
+  discount_percentage: string;
+  discounted_price: string;
+  start_date: string;
+  end_date: string;
+  is_active: boolean;
 }
 
 const emptyForm: MenuItemForm = {
@@ -43,6 +55,17 @@ const emptyForm: MenuItemForm = {
   is_available: true,
 };
 
+const emptySpecialForm: WeeklySpecialForm = {
+  menu_item_id: '',
+  menu_item_name: '',
+  original_price: '',
+  discount_percentage: '20',
+  discounted_price: '',
+  start_date: format(new Date(), 'yyyy-MM-dd'),
+  end_date: format(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
+  is_active: true,
+};
+
 const Admin = () => {
   const navigate = useNavigate();
   const { user, isAdmin, loading } = useAuth();
@@ -51,6 +74,11 @@ const Admin = () => {
   const [formData, setFormData] = useState<MenuItemForm>(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  
+  // Weekly Specials state
+  const [specialFormData, setSpecialFormData] = useState<WeeklySpecialForm>(emptySpecialForm);
+  const [editingSpecialId, setEditingSpecialId] = useState<string | null>(null);
+  const [specialDialogOpen, setSpecialDialogOpen] = useState(false);
 
   // Fetch all menu items (admin can see all)
   const { data: menuItems, isLoading: menuLoading } = useQuery({
@@ -92,6 +120,55 @@ const Admin = () => {
         .from('reservations')
         .select('*')
         .order('reservation_date', { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+    enabled: isAdmin,
+  });
+
+  // Fetch all weekly specials
+  const { data: weeklySpecials, isLoading: specialsLoading } = useQuery({
+    queryKey: ['admin-weekly-specials'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('weekly_specials')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: isAdmin,
+  });
+
+  // Fetch all loyalty points with user info
+  const { data: loyaltyData, isLoading: loyaltyLoading } = useQuery({
+    queryKey: ['admin-loyalty-points'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('loyalty_points')
+        .select(`
+          *,
+          profiles:user_id (full_name, email)
+        `)
+        .order('points', { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: isAdmin,
+  });
+
+  // Fetch loyalty transactions
+  const { data: loyaltyTransactions, isLoading: transactionsLoading } = useQuery({
+    queryKey: ['admin-loyalty-transactions'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('loyalty_transactions')
+        .select(`
+          *,
+          profiles:user_id (full_name, email)
+        `)
+        .order('created_at', { ascending: false })
+        .limit(50);
       if (error) throw error;
       return data;
     },
@@ -187,6 +264,63 @@ const Admin = () => {
     },
   });
 
+  // Create/Update weekly special mutation
+  const saveWeeklySpecial = useMutation({
+    mutationFn: async (data: WeeklySpecialForm) => {
+      const specialData = {
+        menu_item_id: data.menu_item_id,
+        menu_item_name: data.menu_item_name,
+        original_price: parseInt(data.original_price),
+        discount_percentage: parseInt(data.discount_percentage),
+        discounted_price: parseInt(data.discounted_price),
+        start_date: data.start_date,
+        end_date: data.end_date,
+        is_active: data.is_active,
+      };
+
+      if (editingSpecialId) {
+        const { error } = await supabase
+          .from('weekly_specials')
+          .update(specialData)
+          .eq('id', editingSpecialId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('weekly_specials')
+          .insert(specialData);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-weekly-specials'] });
+      queryClient.invalidateQueries({ queryKey: ['weekly-specials'] });
+      toast.success(editingSpecialId ? 'Weekly special updated!' : 'Weekly special created!');
+      setSpecialDialogOpen(false);
+      setSpecialFormData(emptySpecialForm);
+      setEditingSpecialId(null);
+    },
+    onError: (error) => {
+      toast.error('Failed to save weekly special');
+      console.error(error);
+    },
+  });
+
+  // Delete weekly special mutation
+  const deleteWeeklySpecial = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('weekly_specials')
+        .delete()
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-weekly-specials'] });
+      queryClient.invalidateQueries({ queryKey: ['weekly-specials'] });
+      toast.success('Weekly special deleted');
+    },
+  });
+
   const handleEdit = (item: any) => {
     setFormData({
       name: item.name,
@@ -211,6 +345,56 @@ const Admin = () => {
       return;
     }
     saveMenuItem.mutate(formData);
+  };
+
+  const handleEditSpecial = (special: any) => {
+    setSpecialFormData({
+      menu_item_id: special.menu_item_id,
+      menu_item_name: special.menu_item_name,
+      original_price: special.original_price.toString(),
+      discount_percentage: special.discount_percentage.toString(),
+      discounted_price: special.discounted_price.toString(),
+      start_date: special.start_date,
+      end_date: special.end_date,
+      is_active: special.is_active,
+    });
+    setEditingSpecialId(special.id);
+    setSpecialDialogOpen(true);
+  };
+
+  const handleSpecialSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!specialFormData.menu_item_name || !specialFormData.original_price) {
+      toast.error('Menu item and original price are required');
+      return;
+    }
+    saveWeeklySpecial.mutate(specialFormData);
+  };
+
+  const handleMenuItemSelectForSpecial = (itemId: string) => {
+    const item = menuItems?.find(m => m.id === itemId);
+    if (item) {
+      const discountPercent = parseInt(specialFormData.discount_percentage) || 20;
+      const discountedPrice = Math.round(item.price * (1 - discountPercent / 100));
+      setSpecialFormData({
+        ...specialFormData,
+        menu_item_id: item.id,
+        menu_item_name: item.name,
+        original_price: item.price.toString(),
+        discounted_price: discountedPrice.toString(),
+      });
+    }
+  };
+
+  const handleDiscountChange = (percent: string) => {
+    const discountPercent = parseInt(percent) || 0;
+    const originalPrice = parseInt(specialFormData.original_price) || 0;
+    const discountedPrice = Math.round(originalPrice * (1 - discountPercent / 100));
+    setSpecialFormData({
+      ...specialFormData,
+      discount_percentage: percent,
+      discounted_price: discountedPrice.toString(),
+    });
   };
 
   if (loading) {
@@ -271,18 +455,26 @@ const Admin = () => {
 
       <main className="container mx-auto px-4 py-8">
         <Tabs defaultValue="menu" className="space-y-6">
-          <TabsList className="grid w-full max-w-md grid-cols-3">
+          <TabsList className="grid w-full max-w-4xl grid-cols-5">
             <TabsTrigger value="menu" className="flex items-center gap-2">
               <UtensilsCrossed className="h-4 w-4" />
-              Menu
+              <span className="hidden sm:inline">Menu</span>
             </TabsTrigger>
             <TabsTrigger value="orders" className="flex items-center gap-2">
               <ShoppingBag className="h-4 w-4" />
-              Orders
+              <span className="hidden sm:inline">Orders</span>
             </TabsTrigger>
             <TabsTrigger value="reservations" className="flex items-center gap-2">
               <CalendarDays className="h-4 w-4" />
-              Reservations
+              <span className="hidden sm:inline">Reservations</span>
+            </TabsTrigger>
+            <TabsTrigger value="specials" className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4" />
+              <span className="hidden sm:inline">Specials</span>
+            </TabsTrigger>
+            <TabsTrigger value="loyalty" className="flex items-center gap-2">
+              <Trophy className="h-4 w-4" />
+              <span className="hidden sm:inline">Loyalty</span>
             </TabsTrigger>
           </TabsList>
 
@@ -590,6 +782,338 @@ const Admin = () => {
                 )}
               </div>
             )}
+          </TabsContent>
+
+          {/* Weekly Specials Tab */}
+          <TabsContent value="specials" className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold">Weekly Specials</h2>
+              <Dialog open={specialDialogOpen} onOpenChange={setSpecialDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button onClick={() => { setSpecialFormData(emptySpecialForm); setEditingSpecialId(null); }}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Special
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-lg">
+                  <DialogHeader>
+                    <DialogTitle>{editingSpecialId ? 'Edit Weekly Special' : 'Add Weekly Special'}</DialogTitle>
+                    <DialogDescription>
+                      {editingSpecialId ? 'Update the special details' : 'Create a new weekly special offer'}
+                    </DialogDescription>
+                  </DialogHeader>
+                  <form onSubmit={handleSpecialSubmit} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Select Menu Item *</Label>
+                      <Select
+                        value={specialFormData.menu_item_id}
+                        onValueChange={handleMenuItemSelectForSpecial}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Choose a menu item" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {menuItems?.map((item) => (
+                            <SelectItem key={item.id} value={item.id}>
+                              {item.name} - KSh {item.price.toLocaleString()}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Original Price (KSh)</Label>
+                        <Input
+                          type="number"
+                          value={specialFormData.original_price}
+                          disabled
+                          className="bg-muted"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Discount %</Label>
+                        <Select
+                          value={specialFormData.discount_percentage}
+                          onValueChange={handleDiscountChange}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="10">10%</SelectItem>
+                            <SelectItem value="15">15%</SelectItem>
+                            <SelectItem value="20">20%</SelectItem>
+                            <SelectItem value="25">25%</SelectItem>
+                            <SelectItem value="30">30%</SelectItem>
+                            <SelectItem value="40">40%</SelectItem>
+                            <SelectItem value="50">50%</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Discounted Price (KSh)</Label>
+                      <Input
+                        type="number"
+                        value={specialFormData.discounted_price}
+                        disabled
+                        className="bg-muted font-bold text-primary"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Start Date</Label>
+                        <Input
+                          type="date"
+                          value={specialFormData.start_date}
+                          onChange={(e) => setSpecialFormData({ ...specialFormData, start_date: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>End Date</Label>
+                        <Input
+                          type="date"
+                          value={specialFormData.end_date}
+                          onChange={(e) => setSpecialFormData({ ...specialFormData, end_date: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={specialFormData.is_active}
+                        onCheckedChange={(c) => setSpecialFormData({ ...specialFormData, is_active: c })}
+                      />
+                      <Label>Active</Label>
+                    </div>
+                    <Button type="submit" className="w-full" disabled={saveWeeklySpecial.isPending}>
+                      {saveWeeklySpecial.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                      {editingSpecialId ? 'Update Special' : 'Create Special'}
+                    </Button>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            </div>
+
+            {specialsLoading ? (
+              <div className="flex justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : (
+              <div className="grid gap-4">
+                {weeklySpecials?.length === 0 ? (
+                  <Card>
+                    <CardContent className="py-12 text-center text-muted-foreground">
+                      No weekly specials yet. Create one to highlight featured dishes!
+                    </CardContent>
+                  </Card>
+                ) : (
+                  weeklySpecials?.map((special) => (
+                    <Card key={special.id} className={!special.is_active ? 'opacity-60' : ''}>
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <div className="bg-primary/10 p-3 rounded-full">
+                              <Sparkles className="h-6 w-6 text-primary" />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h3 className="font-semibold">{special.menu_item_name}</h3>
+                                {special.is_active ? (
+                                  <Badge className="bg-green-500">Active</Badge>
+                                ) : (
+                                  <Badge variant="secondary">Inactive</Badge>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className="text-sm line-through text-muted-foreground">
+                                  KSh {special.original_price.toLocaleString()}
+                                </span>
+                                <span className="font-bold text-primary">
+                                  KSh {special.discounted_price.toLocaleString()}
+                                </span>
+                                <Badge variant="outline" className="text-green-600">
+                                  -{special.discount_percentage}%
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                {format(new Date(special.start_date), 'MMM d')} - {format(new Date(special.end_date), 'MMM d, yyyy')}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button variant="outline" size="icon" onClick={() => handleEditSpecial(special)}>
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="icon"
+                              onClick={() => deleteWeeklySpecial.mutate(special.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Loyalty Points Tab */}
+          <TabsContent value="loyalty" className="space-y-6">
+            <h2 className="text-2xl font-bold">Loyalty Program</h2>
+
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Total Members
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-2">
+                    <Users className="h-5 w-5 text-primary" />
+                    <span className="text-2xl font-bold">{loyaltyData?.length || 0}</span>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Total Points Earned
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-2">
+                    <Trophy className="h-5 w-5 text-yellow-500" />
+                    <span className="text-2xl font-bold">
+                      {loyaltyData?.reduce((sum, l) => sum + (l.total_earned || 0), 0).toLocaleString() || 0}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Total Points Redeemed
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-green-500" />
+                    <span className="text-2xl font-bold">
+                      {loyaltyData?.reduce((sum, l) => sum + (l.total_redeemed || 0), 0).toLocaleString() || 0}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* User Loyalty Table */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Member Points</CardTitle>
+                <CardDescription>View and track loyalty points for all customers</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loyaltyLoading ? (
+                  <div className="flex justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                ) : loyaltyData?.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">No loyalty members yet</p>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Customer</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead className="text-right">Current Points</TableHead>
+                        <TableHead className="text-right">Total Earned</TableHead>
+                        <TableHead className="text-right">Total Redeemed</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {loyaltyData?.map((loyalty) => (
+                        <TableRow key={loyalty.id}>
+                          <TableCell className="font-medium">
+                            {(loyalty.profiles as any)?.full_name || 'Unknown'}
+                          </TableCell>
+                          <TableCell>
+                            {(loyalty.profiles as any)?.email || '-'}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Badge variant="outline" className="font-bold">
+                              {loyalty.points.toLocaleString()}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right text-green-600">
+                            +{loyalty.total_earned.toLocaleString()}
+                          </TableCell>
+                          <TableCell className="text-right text-orange-600">
+                            -{loyalty.total_redeemed.toLocaleString()}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Recent Transactions */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Transactions</CardTitle>
+                <CardDescription>Latest loyalty point activities</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {transactionsLoading ? (
+                  <div className="flex justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                ) : loyaltyTransactions?.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">No transactions yet</p>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Customer</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Source</TableHead>
+                        <TableHead className="text-right">Points</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {loyaltyTransactions?.map((tx) => (
+                        <TableRow key={tx.id}>
+                          <TableCell className="text-muted-foreground">
+                            {format(new Date(tx.created_at), 'MMM d, h:mm a')}
+                          </TableCell>
+                          <TableCell className="font-medium">
+                            {(tx.profiles as any)?.full_name || 'Unknown'}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={tx.type === 'earn' ? 'default' : 'secondary'}>
+                              {tx.type}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="capitalize">{tx.source}</TableCell>
+                          <TableCell className={`text-right font-bold ${tx.type === 'earn' ? 'text-green-600' : 'text-orange-600'}`}>
+                            {tx.type === 'earn' ? '+' : '-'}{tx.points.toLocaleString()}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </main>
