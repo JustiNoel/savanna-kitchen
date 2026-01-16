@@ -1,6 +1,9 @@
 import Header from '@/components/Header';
 import Hero from '@/components/Hero';
 import WelcomeGreeting from '@/components/WelcomeGreeting';
+import WelcomePopup from '@/components/WelcomePopup';
+import AIHelpChat from '@/components/AIHelpChat';
+import DailyDishes from '@/components/DailyDishes';
 import WeeklySpecials from '@/components/WeeklySpecials';
 import MenuSection from '@/components/MenuSection';
 import OrderTracker from '@/components/OrderTracker';
@@ -15,8 +18,11 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <WelcomeGreeting />
+      <WelcomePopup />
+      <AIHelpChat />
       <main>
         <Hero />
+        <DailyDishes />
         <WeeklySpecials />
         <OrderTracker />
         <MenuSection />

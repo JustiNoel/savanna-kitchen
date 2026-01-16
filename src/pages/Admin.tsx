@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -15,7 +16,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { ArrowLeft, Plus, Pencil, Trash2, Loader2, ShoppingBag, CalendarDays, UtensilsCrossed, Sparkles, Trophy, Users } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, Loader2, ShoppingBag, CalendarDays, UtensilsCrossed, Sparkles, Trophy, Users, Lock, Eye, EyeOff } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 interface MenuItemForm {
@@ -66,14 +67,23 @@ const emptySpecialForm: WeeklySpecialForm = {
   is_active: true,
 };
 
+const ADMIN_PASSWORD = 'SavannaAdmin2024';
+
 const Admin = () => {
   const navigate = useNavigate();
-  const { user, isAdmin, loading } = useAuth();
+  const { user, isAdmin, loading, signIn } = useAuth();
   const queryClient = useQueryClient();
   
   const [formData, setFormData] = useState<MenuItemForm>(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  
+  // Admin login state
+  const [adminEmail, setAdminEmail] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [loginError, setLoginError] = useState('');
   
   // Weekly Specials state
   const [specialFormData, setSpecialFormData] = useState<WeeklySpecialForm>(emptySpecialForm);
@@ -397,6 +407,23 @@ const Admin = () => {
     });
   };
 
+  const handleAdminLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoggingIn(true);
+    setLoginError('');
+
+    try {
+      const { error } = await signIn(adminEmail, adminPassword);
+      if (error) {
+        setLoginError(error.message);
+      }
+    } catch (err) {
+      setLoginError('An error occurred. Please try again.');
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -407,20 +434,92 @@ const Admin = () => {
 
   if (!user || !isAdmin) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
-        <Card className="max-w-md w-full text-center">
-          <CardHeader>
-            <CardTitle>Access Denied</CardTitle>
-            <CardDescription>
-              You don't have permission to access this page.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={() => navigate('/')}>
-              Go Home
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background via-background to-primary/10 p-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <Card className="max-w-md w-full">
+            <CardHeader className="text-center">
+              <div className="mx-auto h-16 w-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+                <Lock className="h-8 w-8 text-primary" />
+              </div>
+              <CardTitle className="text-2xl">Admin Login</CardTitle>
+              <CardDescription>
+                Please sign in with your admin credentials to access the dashboard.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleAdminLogin} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="admin@savannakitchen.com"
+                    value={adminEmail}
+                    onChange={(e) => setAdminEmail(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="Enter your password"
+                      value={adminPassword}
+                      onChange={(e) => setAdminPassword(e.target.value)}
+                      required
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+                
+                {loginError && (
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="text-sm text-destructive text-center"
+                  >
+                    {loginError}
+                  </motion.p>
+                )}
+
+                <Button type="submit" className="w-full" disabled={isLoggingIn}>
+                  {isLoggingIn ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Signing In...
+                    </>
+                  ) : (
+                    'Sign In'
+                  )}
+                </Button>
+
+                <div className="text-center">
+                  <Button variant="link" onClick={() => navigate('/')}>
+                    Go Back Home
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
     );
   }
