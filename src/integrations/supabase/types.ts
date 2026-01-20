@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      grocery_items: {
+        Row: {
+          category: string
+          created_at: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          is_available: boolean | null
+          name: string
+          price: number
+          stock_quantity: number | null
+          unit: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_available?: boolean | null
+          name: string
+          price: number
+          stock_quantity?: number | null
+          unit?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_available?: boolean | null
+          name?: string
+          price?: number
+          stock_quantity?: number | null
+          unit?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       loyalty_points: {
         Row: {
           created_at: string
@@ -176,8 +218,13 @@ export type Database = {
       orders: {
         Row: {
           created_at: string
+          delivery_address: string | null
+          delivery_instructions: string | null
+          delivery_latitude: number | null
+          delivery_longitude: number | null
           id: string
           notes: string | null
+          order_type: string | null
           payment_method: string | null
           payment_status: string | null
           status: string
@@ -187,8 +234,13 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          delivery_address?: string | null
+          delivery_instructions?: string | null
+          delivery_latitude?: number | null
+          delivery_longitude?: number | null
           id?: string
           notes?: string | null
+          order_type?: string | null
           payment_method?: string | null
           payment_status?: string | null
           status?: string
@@ -198,8 +250,13 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          delivery_address?: string | null
+          delivery_instructions?: string | null
+          delivery_latitude?: number | null
+          delivery_longitude?: number | null
           id?: string
           notes?: string | null
+          order_type?: string | null
           payment_method?: string | null
           payment_status?: string | null
           status?: string
@@ -308,6 +365,48 @@ export type Database = {
           rating?: number
           reviewer_name?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      shop_items: {
+        Row: {
+          brand: string | null
+          category: string
+          created_at: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          is_available: boolean | null
+          name: string
+          price: number
+          stock_quantity: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          brand?: string | null
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_available?: boolean | null
+          name: string
+          price: number
+          stock_quantity?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          brand?: string | null
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_available?: boolean | null
+          name?: string
+          price?: number
+          stock_quantity?: number | null
+          updated_at?: string | null
         }
         Relationships: []
       }

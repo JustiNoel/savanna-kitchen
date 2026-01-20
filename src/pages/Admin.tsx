@@ -16,8 +16,9 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { ArrowLeft, Plus, Pencil, Trash2, Loader2, ShoppingBag, CalendarDays, UtensilsCrossed, Sparkles, Trophy, Users, Lock, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, Loader2, ShoppingBag, CalendarDays, UtensilsCrossed, Sparkles, Trophy, Users, Lock, Eye, EyeOff, MapPin, UserPlus, Shield, Leaf, Store } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 interface MenuItemForm {
   name: string;
@@ -89,6 +90,10 @@ const Admin = () => {
   const [specialFormData, setSpecialFormData] = useState<WeeklySpecialForm>(emptySpecialForm);
   const [editingSpecialId, setEditingSpecialId] = useState<string | null>(null);
   const [specialDialogOpen, setSpecialDialogOpen] = useState(false);
+  
+  // Admin management state
+  const [newAdminEmail, setNewAdminEmail] = useState('');
+  const [addAdminDialogOpen, setAddAdminDialogOpen] = useState(false);
 
   // Fetch all menu items (admin can see all)
   const { data: menuItems, isLoading: menuLoading } = useQuery({
@@ -185,7 +190,51 @@ const Admin = () => {
     enabled: isAdmin,
   });
 
-  // Create/Update menu item mutation
+  // Fetch all admins
+  const { data: adminUsers, isLoading: adminsLoading, refetch: refetchAdmins } = useQuery({
+    queryKey: ['admin-users'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select(`
+          *,
+          profiles:user_id (full_name, email)
+        `)
+        .eq('role', 'admin');
+      if (error) throw error;
+      return data;
+    },
+    enabled: isAdmin,
+  });
+
+  // Fetch grocery items
+  const { data: groceryItems, isLoading: groceryLoading } = useQuery({
+    queryKey: ['admin-grocery-items'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('grocery_items')
+        .select('*')
+        .order('category', { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+    enabled: isAdmin,
+  });
+
+  // Fetch shop items
+  const { data: shopItems, isLoading: shopLoading } = useQuery({
+    queryKey: ['admin-shop-items'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('shop_items')
+        .select('*')
+        .order('category', { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+    enabled: isAdmin,
+  });
+
   const saveMenuItem = useMutation({
     mutationFn: async (data: MenuItemForm) => {
       const itemData = {
@@ -328,6 +377,75 @@ const Admin = () => {
       queryClient.invalidateQueries({ queryKey: ['admin-weekly-specials'] });
       queryClient.invalidateQueries({ queryKey: ['weekly-specials'] });
       toast.success('Weekly special deleted');
+    },
+  });
+
+  // Add admin mutation
+  const addAdmin = useMutation({
+    mutationFn: async (email: string) => {
+      // First find the user by email in profiles
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('email', email)
+        .single();
+      
+      if (profileError || !profile) {
+        throw new Error('User not found. Make sure they have created an account first.');
+      }
+
+      // Check if already admin
+      const { data: existing } = await supabase
+        .from('user_roles')
+        .select('id')
+        .eq('user_id', profile.user_id)
+        .eq('role', 'admin')
+        .single();
+
+      if (existing) {
+        throw new Error('This user is already an admin.');
+      }
+
+      // Add admin role
+      const { error } = await supabase
+        .from('user_roles')
+        .insert({ user_id: profile.user_id, role: 'admin' });
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      toast.success('Admin added successfully!');
+      setNewAdminEmail('');
+      setAddAdminDialogOpen(false);
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+
+  // Remove admin mutation
+  const removeAdmin = useMutation({
+    mutationFn: async (userId: string) => {
+      // Don't allow removing yourself
+      if (userId === user?.id) {
+        throw new Error('You cannot remove yourself as admin.');
+      }
+
+      const { error } = await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', userId)
+        .eq('role', 'admin');
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      toast.success('Admin removed successfully');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
     },
   });
 
@@ -554,26 +672,38 @@ const Admin = () => {
 
       <main className="container mx-auto px-4 py-8">
         <Tabs defaultValue="menu" className="space-y-6">
-          <TabsList className="grid w-full max-w-4xl grid-cols-5">
-            <TabsTrigger value="menu" className="flex items-center gap-2">
+          <TabsList className="grid w-full max-w-6xl grid-cols-8 gap-1">
+            <TabsTrigger value="menu" className="flex items-center gap-1 text-xs sm:text-sm">
               <UtensilsCrossed className="h-4 w-4" />
               <span className="hidden sm:inline">Menu</span>
             </TabsTrigger>
-            <TabsTrigger value="orders" className="flex items-center gap-2">
+            <TabsTrigger value="groceries" className="flex items-center gap-1 text-xs sm:text-sm">
+              <Leaf className="h-4 w-4" />
+              <span className="hidden sm:inline">Grocery</span>
+            </TabsTrigger>
+            <TabsTrigger value="shop" className="flex items-center gap-1 text-xs sm:text-sm">
+              <Store className="h-4 w-4" />
+              <span className="hidden sm:inline">Shop</span>
+            </TabsTrigger>
+            <TabsTrigger value="orders" className="flex items-center gap-1 text-xs sm:text-sm">
               <ShoppingBag className="h-4 w-4" />
               <span className="hidden sm:inline">Orders</span>
             </TabsTrigger>
-            <TabsTrigger value="reservations" className="flex items-center gap-2">
+            <TabsTrigger value="reservations" className="flex items-center gap-1 text-xs sm:text-sm">
               <CalendarDays className="h-4 w-4" />
               <span className="hidden sm:inline">Reservations</span>
             </TabsTrigger>
-            <TabsTrigger value="specials" className="flex items-center gap-2">
+            <TabsTrigger value="specials" className="flex items-center gap-1 text-xs sm:text-sm">
               <Sparkles className="h-4 w-4" />
               <span className="hidden sm:inline">Specials</span>
             </TabsTrigger>
-            <TabsTrigger value="loyalty" className="flex items-center gap-2">
+            <TabsTrigger value="loyalty" className="flex items-center gap-1 text-xs sm:text-sm">
               <Trophy className="h-4 w-4" />
               <span className="hidden sm:inline">Loyalty</span>
+            </TabsTrigger>
+            <TabsTrigger value="admins" className="flex items-center gap-1 text-xs sm:text-sm">
+              <Shield className="h-4 w-4" />
+              <span className="hidden sm:inline">Admins</span>
             </TabsTrigger>
           </TabsList>
 
@@ -1213,6 +1343,100 @@ const Admin = () => {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Admins Management Tab */}
+          <TabsContent value="admins" className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold">Admin Management</h2>
+              <Dialog open={addAdminDialogOpen} onOpenChange={setAddAdminDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Add Admin
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Add New Admin</DialogTitle>
+                    <DialogDescription>
+                      Enter the email of a registered user to grant admin access.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="admin-email">User Email</Label>
+                      <Input
+                        id="admin-email"
+                        type="email"
+                        placeholder="user@example.com"
+                        value={newAdminEmail}
+                        onChange={(e) => setNewAdminEmail(e.target.value)}
+                      />
+                    </div>
+                    <Button
+                      className="w-full"
+                      onClick={() => addAdmin.mutate(newAdminEmail)}
+                      disabled={addAdmin.isPending || !newAdminEmail}
+                    >
+                      {addAdmin.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                      Add as Admin
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+
+            {adminsLoading ? (
+              <div className="flex justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : (
+              <div className="grid gap-4">
+                {adminUsers?.map((admin) => (
+                  <Card key={admin.id}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="bg-primary/10 p-3 rounded-full">
+                            <Shield className="h-6 w-6 text-primary" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold">{(admin.profiles as any)?.full_name || 'Unknown'}</h3>
+                            <p className="text-sm text-muted-foreground">{(admin.profiles as any)?.email}</p>
+                            <Badge className="mt-1">Admin</Badge>
+                          </div>
+                        </div>
+                        {admin.user_id !== user?.id && (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="destructive" size="sm">
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Remove
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Remove Admin Access?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  This will remove admin privileges from {(admin.profiles as any)?.email}.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => removeAdmin.mutate(admin.user_id)}>
+                                  Remove
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </main>

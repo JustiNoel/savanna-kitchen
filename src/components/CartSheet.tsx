@@ -12,6 +12,14 @@ import { toast } from 'sonner';
 import { getImageForDish } from '@/lib/foodImages';
 import { supabase } from '@/integrations/supabase/client';
 import PaymentMethodDialog from './PaymentMethodDialog';
+import LocationPicker from './LocationPicker';
+
+interface DeliveryLocation {
+  address: string;
+  latitude: number;
+  longitude: number;
+  instructions?: string;
+}
 
 const CartSheet = () => {
   const navigate = useNavigate();
@@ -21,6 +29,7 @@ const CartSheet = () => {
   const addPoints = useAddLoyaltyPoints();
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [deliveryLocation, setDeliveryLocation] = useState<DeliveryLocation | null>(null);
 
   const formatPrice = (price: number) => {
     return `KSh ${price.toLocaleString()}`;
@@ -58,6 +67,10 @@ const CartSheet = () => {
     if (!user) {
       toast.error('Please sign in to place an order');
       navigate('/auth');
+      return;
+    }
+    if (!deliveryLocation) {
+      toast.error('Please set your delivery location first');
       return;
     }
     setShowPaymentDialog(true);
@@ -179,6 +192,13 @@ const CartSheet = () => {
           );
         })}
       </div>
+
+      {/* Location Picker */}
+      {user && (
+        <div className="py-4">
+          <LocationPicker onLocationSelect={setDeliveryLocation} />
+        </div>
+      )}
 
       <div className="pt-4 border-t border-border space-y-4">
         <div className="space-y-2">

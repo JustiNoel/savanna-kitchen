@@ -6,6 +6,8 @@ import AIHelpChat from '@/components/AIHelpChat';
 import DailyDishes from '@/components/DailyDishes';
 import WeeklySpecials from '@/components/WeeklySpecials';
 import MenuSection from '@/components/MenuSection';
+import GrocerySection from '@/components/GrocerySection';
+import ShopSection from '@/components/ShopSection';
 import OrderTracker from '@/components/OrderTracker';
 import GallerySection from '@/components/GallerySection';
 import ReviewsSection from '@/components/ReviewsSection';
@@ -25,7 +27,35 @@ const Index = () => {
         <DailyDishes />
         <WeeklySpecials />
         <OrderTracker />
+        
+        {/* Main Navigation Tabs for Food, Grocery, Shop */}
+        <section id="grabbys" className="py-8 bg-muted/30">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-8">
+              <h2 className="font-display text-3xl md:text-4xl font-bold mb-2">
+                Welcome to <span className="text-primary">Grabbys</span>
+              </h2>
+              <p className="text-muted-foreground">
+                Your one-stop destination for food, groceries, and everyday essentials
+              </p>
+            </div>
+            <div className="flex flex-wrap justify-center gap-4 mb-8">
+              <a href="#menu" className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-full font-medium hover:bg-primary/90 transition-colors">
+                🍽️ Food
+              </a>
+              <a href="#groceries" className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-full font-medium hover:bg-green-700 transition-colors">
+                🥕 Grocery
+              </a>
+              <a href="#shop" className="flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-full font-medium hover:bg-purple-700 transition-colors">
+                🏪 Shop
+              </a>
+            </div>
+          </div>
+        </section>
+        
         <MenuSection />
+        <GrocerySection />
+        <ShopSection />
         <GallerySection />
         <section id="loyalty" className="py-16 bg-muted/30">
           <div className="container mx-auto px-4">
