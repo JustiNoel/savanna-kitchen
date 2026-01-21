@@ -33,24 +33,27 @@ const Header = () => {
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <img src={logo} alt="Savanna Kitchen" className="h-10 w-10 md:h-12 md:w-12 object-contain" />
+            <img src={logo} alt="Grabbys" className="h-10 w-10 md:h-12 md:w-12 object-contain" />
             <h1 className="font-display text-xl md:text-2xl font-bold text-foreground">
-              Savanna <span className="text-primary">Kitchen</span>
+              <span className="text-primary">Grabbys</span>
             </h1>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-8">
-            <a href="#menu" className="text-foreground/80 hover:text-primary transition-colors font-medium">
-              Menu
+          <nav className="hidden md:flex items-center gap-6">
+            <a href="#menu" className="text-foreground/80 hover:text-primary transition-colors font-medium text-sm">
+              🍽️ Food
             </a>
-            <a href="#reviews" className="text-foreground/80 hover:text-primary transition-colors font-medium">
-              Reviews
+            <a href="#groceries" className="text-foreground/80 hover:text-primary transition-colors font-medium text-sm">
+              🥕 Grocery
             </a>
-            <a href="#reservations" className="text-foreground/80 hover:text-primary transition-colors font-medium">
-              Reservations
+            <a href="#shop" className="text-foreground/80 hover:text-primary transition-colors font-medium text-sm">
+              🛒 Shop
             </a>
-            <a href="#contact" className="text-foreground/80 hover:text-primary transition-colors font-medium">
+            <a href="#spirits" className="text-foreground/80 hover:text-primary transition-colors font-medium text-sm">
+              🍾 Spirits
+            </a>
+            <a href="#contact" className="text-foreground/80 hover:text-primary transition-colors font-medium text-sm">
               Contact
             </a>
           </nav>
