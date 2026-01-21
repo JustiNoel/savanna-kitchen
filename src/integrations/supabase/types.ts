@@ -410,6 +410,54 @@ export type Database = {
         }
         Relationships: []
       }
+      spirits_items: {
+        Row: {
+          alcohol_percentage: number | null
+          brand: string | null
+          category: string
+          created_at: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          is_available: boolean | null
+          name: string
+          price: number
+          stock_quantity: number | null
+          updated_at: string | null
+          volume: string | null
+        }
+        Insert: {
+          alcohol_percentage?: number | null
+          brand?: string | null
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_available?: boolean | null
+          name: string
+          price: number
+          stock_quantity?: number | null
+          updated_at?: string | null
+          volume?: string | null
+        }
+        Update: {
+          alcohol_percentage?: number | null
+          brand?: string | null
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_available?: boolean | null
+          name?: string
+          price?: number
+          stock_quantity?: number | null
+          updated_at?: string | null
+          volume?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
