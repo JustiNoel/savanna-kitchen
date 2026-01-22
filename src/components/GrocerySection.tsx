@@ -130,7 +130,22 @@ const GrocerySection = () => {
                 <Card className="group hover:shadow-lg transition-all duration-300 overflow-hidden h-full">
                   <CardContent className="p-4 flex flex-col h-full">
                     <div className="text-center mb-3">
-                      <div className="text-5xl mb-2">{getItemEmoji(item.category, item.name)}</div>
+                      {item.image_url ? (
+                        <div className="w-full h-20 mb-2 flex items-center justify-center">
+                          <img 
+                            src={item.image_url} 
+                            alt={item.name} 
+                            className="max-h-20 max-w-full object-contain rounded"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                            }}
+                          />
+                          <div className="hidden text-5xl">{getItemEmoji(item.category, item.name)}</div>
+                        </div>
+                      ) : (
+                        <div className="text-5xl mb-2">{getItemEmoji(item.category, item.name)}</div>
+                      )}
                       <h3 className="font-semibold text-sm line-clamp-2">{item.name}</h3>
                       <p className="text-xs text-muted-foreground mt-1">{item.unit && `per ${item.unit}`}</p>
                     </div>
