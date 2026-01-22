@@ -129,10 +129,24 @@ const SpiritsSection = () => {
                 viewport={{ once: true }}
                 transition={{ duration: 0.3, delay: index * 0.05 }}
               >
-                <Card className="group hover:shadow-lg transition-all duration-300 overflow-hidden h-full">
+              <Card className="group hover:shadow-lg transition-all duration-300 overflow-hidden h-full">
                   <CardContent className="p-4 flex flex-col h-full">
                     <div className="text-center mb-3">
-                      <div className="text-5xl mb-2">{getItemEmoji(item.category)}</div>
+                      {item.image_url ? (
+                        <div className="w-20 h-20 mx-auto mb-2 rounded-lg overflow-hidden bg-muted">
+                          <img 
+                            src={item.image_url} 
+                            alt={item.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              e.currentTarget.parentElement!.innerHTML = `<span class="text-5xl flex items-center justify-center h-full">${getItemEmoji(item.category)}</span>`;
+                            }}
+                          />
+                        </div>
+                      ) : (
+                        <div className="text-5xl mb-2">{getItemEmoji(item.category)}</div>
+                      )}
                       <h3 className="font-semibold text-sm line-clamp-2">{item.name}</h3>
                       {item.brand && (
                         <Badge variant="secondary" className="mt-1 text-xs">

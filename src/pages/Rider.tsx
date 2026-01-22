@@ -53,6 +53,66 @@ const Rider = () => {
   const queryClient = useQueryClient();
   const [isAvailable, setIsAvailable] = useState(true);
   const [isRider, setIsRider] = useState<boolean | null>(null);
+  const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [watchId, setWatchId] = useState<number | null>(null);
+
+  // Start GPS tracking when rider is online
+  useEffect(() => {
+    if (!user || !isRider || !isAvailable) {
+      if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+        setWatchId(null);
+      }
+      return;
+    }
+
+    const id = navigator.geolocation.watchPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        setCurrentLocation({ lat: latitude, lng: longitude });
+        
+        // Update rider location in database
+        await supabase
+          .from('riders')
+          .update({
+            current_latitude: latitude,
+            current_longitude: longitude,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('user_id', user.id);
+        
+        // Broadcast location via realtime channel
+        const channel = supabase.channel('rider-locations');
+        channel.send({
+          type: 'broadcast',
+          event: 'location_update',
+          payload: {
+            rider_id: user.id,
+            lat: latitude,
+            lng: longitude,
+            timestamp: new Date().toISOString(),
+          },
+        });
+      },
+      (error) => {
+        console.error('GPS Error:', error);
+        toast.error('Unable to get your location. Please enable GPS.');
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 5000,
+      }
+    );
+
+    setWatchId(id);
+
+    return () => {
+      if (id !== null) {
+        navigator.geolocation.clearWatch(id);
+      }
+    };
+  }, [user, isRider, isAvailable]);
 
   // Check if user is a rider
   useEffect(() => {

@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Clock, Bike, Package, CheckCircle, Navigation, Phone, MessageCircle } from 'lucide-react';
+import { MapPin, Clock, Bike, Package, CheckCircle, Navigation, Phone, MessageCircle, Satellite } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import { useOrders } from '@/hooks/useOrders';
+import { supabase } from '@/integrations/supabase/client';
 
 interface RiderLocation {
   lat: number;
@@ -18,38 +19,71 @@ const DeliveryTracker = () => {
   const { data: orders = [] } = useOrders();
   const [riderLocation, setRiderLocation] = useState<RiderLocation | null>(null);
   const [eta, setEta] = useState<number>(0);
+  const [isLiveTracking, setIsLiveTracking] = useState(false);
 
   // Filter orders that are out for delivery
   const activeDeliveries = orders.filter(
-    o => o.status === 'ready' || o.status === 'preparing'
+    o => o.status === 'ready' || o.status === 'preparing' || o.status === 'delivering'
   );
 
-  // Simulate rider movement for demo
+  // Subscribe to real-time rider location updates
   useEffect(() => {
     if (activeDeliveries.length === 0) return;
 
-    // Get delivery location from first active order
+    const channel = supabase
+      .channel('rider-locations')
+      .on('broadcast', { event: 'location_update' }, (payload) => {
+        const { lat, lng, timestamp } = payload.payload;
+        setRiderLocation({
+          lat,
+          lng,
+          lastUpdate: new Date(timestamp),
+        });
+        setIsLiveTracking(true);
+
+        // Calculate ETA based on distance (rough estimate)
+        const order = activeDeliveries[0] as any;
+        if (order.delivery_latitude && order.delivery_longitude) {
+          const distance = calculateDistance(
+            lat, lng,
+            order.delivery_latitude, order.delivery_longitude
+          );
+          // Assume average speed of 30 km/h
+          const timeInMinutes = Math.round((distance / 30) * 60);
+          setEta(Math.max(timeInMinutes, 2)); // Minimum 2 minutes
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [activeDeliveries.length]);
+
+  // Fallback: Simulate rider movement if no live tracking
+  useEffect(() => {
+    if (activeDeliveries.length === 0 || isLiveTracking) return;
+
     const order = activeDeliveries[0] as any;
     const deliveryLat = order.delivery_latitude;
     const deliveryLng = order.delivery_longitude;
 
     if (!deliveryLat || !deliveryLng) return;
 
-    // Simulate rider starting position (restaurant location - Nairobi)
-    const restaurantLat = -1.2864;
-    const restaurantLng = 36.8172;
+    // Maseno Siriba, Kisumu coordinates (restaurant location)
+    const restaurantLat = -0.0011;
+    const restaurantLng = 34.6015;
 
     let progress = 0;
 
     const interval = setInterval(() => {
-      progress += 0.02; // Move 2% closer each update
+      progress += 0.02;
       
       if (progress >= 1) {
         clearInterval(interval);
         return;
       }
 
-      // Linear interpolation between restaurant and delivery location
       const currentLat = restaurantLat + (deliveryLat - restaurantLat) * progress;
       const currentLng = restaurantLng + (deliveryLng - restaurantLng) * progress;
 
@@ -59,13 +93,11 @@ const DeliveryTracker = () => {
         lastUpdate: new Date(),
       });
 
-      // Calculate ETA (remaining time in minutes)
       const remainingProgress = 1 - progress;
-      const totalDeliveryTime = 30; // Assume 30 min total delivery time
+      const totalDeliveryTime = 30;
       setEta(Math.round(remainingProgress * totalDeliveryTime));
-    }, 3000); // Update every 3 seconds
+    }, 3000);
 
-    // Initial values
     setRiderLocation({
       lat: restaurantLat,
       lng: restaurantLng,
@@ -74,7 +106,20 @@ const DeliveryTracker = () => {
     setEta(30);
 
     return () => clearInterval(interval);
-  }, [activeDeliveries.length]);
+  }, [activeDeliveries.length, isLiveTracking]);
+
+  // Calculate distance between two points (Haversine formula)
+  const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
+    const R = 6371; // Earth's radius in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLng/2) * Math.sin(dLng/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
 
   if (!user || activeDeliveries.length === 0) return null;
 
@@ -104,6 +149,12 @@ const DeliveryTracker = () => {
           <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-6 flex items-center gap-2">
             <Bike className="w-7 h-7 text-primary" />
             Live Delivery Tracking
+            {isLiveTracking && (
+              <Badge variant="secondary" className="ml-2 bg-green-100 text-green-700">
+                <Satellite className="w-3 h-3 mr-1 animate-pulse" />
+                GPS Live
+              </Badge>
+            )}
           </h2>
 
           <div className="space-y-4">
