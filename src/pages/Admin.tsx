@@ -19,11 +19,12 @@ import { format } from 'date-fns';
 import { 
   ArrowLeft, Plus, Pencil, Trash2, Loader2, ShoppingBag, CalendarDays, 
   UtensilsCrossed, Sparkles, Trophy, Users, Lock, Eye, EyeOff, MapPin, 
-  UserPlus, Shield, Leaf, Store, Wine, Bike, Mail, Phone 
+  UserPlus, Shield, Leaf, Store, Wine, Bike, Mail, Phone, DollarSign 
 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import FinanceSection from '@/components/admin/FinanceSection';
 
 interface MenuItemForm {
   name: string;
@@ -1065,6 +1066,10 @@ const Admin = () => {
                 <Shield className="h-4 w-4" />
                 <span className="hidden sm:inline">Admins</span>
               </TabsTrigger>
+              <TabsTrigger value="finance" className="flex items-center gap-1 text-xs sm:text-sm">
+                <DollarSign className="h-4 w-4" />
+                <span className="hidden sm:inline">Finance</span>
+              </TabsTrigger>
             </TabsList>
           </ScrollArea>
 
@@ -1977,6 +1982,11 @@ const Admin = () => {
                 ))}
               </div>
             )}
+          </TabsContent>
+
+          {/* ============ FINANCE TAB ============ */}
+          <TabsContent value="finance" className="space-y-4">
+            <FinanceSection />
           </TabsContent>
         </Tabs>
       </main>
