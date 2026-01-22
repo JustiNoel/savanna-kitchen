@@ -19,12 +19,13 @@ import { format } from 'date-fns';
 import { 
   ArrowLeft, Plus, Pencil, Trash2, Loader2, ShoppingBag, CalendarDays, 
   UtensilsCrossed, Sparkles, Trophy, Users, Lock, Eye, EyeOff, MapPin, 
-  UserPlus, Shield, Leaf, Store, Wine, Bike, Mail, Phone, DollarSign 
+  UserPlus, Shield, Leaf, Store, Wine, Bike, Mail, Phone, DollarSign, Package
 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import FinanceSection from '@/components/admin/FinanceSection';
+import InventoryAlerts from '@/components/InventoryAlerts';
 
 interface MenuItemForm {
   name: string;
@@ -1070,6 +1071,10 @@ const Admin = () => {
                 <DollarSign className="h-4 w-4" />
                 <span className="hidden sm:inline">Finance</span>
               </TabsTrigger>
+              <TabsTrigger value="inventory" className="flex items-center gap-1 text-xs sm:text-sm">
+                <Package className="h-4 w-4" />
+                <span className="hidden sm:inline">Inventory</span>
+              </TabsTrigger>
             </TabsList>
           </ScrollArea>
 
@@ -1987,6 +1992,37 @@ const Admin = () => {
           {/* ============ FINANCE TAB ============ */}
           <TabsContent value="finance" className="space-y-4">
             <FinanceSection />
+          </TabsContent>
+
+          {/* ============ INVENTORY TAB ============ */}
+          <TabsContent value="inventory" className="space-y-4">
+            <h2 className="text-2xl font-bold">Inventory Alerts</h2>
+            <InventoryAlerts 
+              groceryItems={(groceryItems || []).map(item => ({
+                id: item.id,
+                name: item.name,
+                stock_quantity: item.stock_quantity,
+                category: item.category,
+                type: 'grocery' as const
+              }))}
+              shopItems={(shopItems || []).map(item => ({
+                id: item.id,
+                name: item.name,
+                stock_quantity: item.stock_quantity,
+                category: item.category,
+                type: 'shop' as const
+              }))}
+              spiritsItems={(spiritsItems || []).map(item => ({
+                id: item.id,
+                name: item.name,
+                stock_quantity: item.stock_quantity,
+                category: item.category,
+                type: 'spirits' as const
+              }))}
+              onRestock={(item) => {
+                toast.info(`Navigate to ${item.type} tab to restock ${item.name}`);
+              }}
+            />
           </TabsContent>
         </Tabs>
       </main>
