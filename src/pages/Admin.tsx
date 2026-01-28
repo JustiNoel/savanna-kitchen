@@ -584,24 +584,44 @@ const Admin = () => {
   // Order status mutation with email notification
   const updateOrderStatus = useMutation({
     mutationFn: async ({ id, status, customerEmail, customerName }: { id: string; status: string; customerEmail?: string; customerName?: string }) => {
-      const { error } = await supabase.from('orders').update({ status }).eq('id', id);
+      const updateData: Record<string, any> = { status };
+      
+      // Add timestamps based on status
+      if (status === 'delivering') {
+        updateData.picked_up_at = new Date().toISOString();
+      } else if (status === 'delivered') {
+        updateData.delivered_at = new Date().toISOString();
+      }
+      
+      const { error } = await supabase.from('orders').update(updateData).eq('id', id);
       if (error) throw error;
       
       // Send status update email
       if (customerEmail) {
-        await supabase.functions.invoke('send-notification', {
-          body: {
-            type: 'order_update',
-            customerEmail,
-            customerName: customerName || 'Customer',
-            details: { orderId: id, status },
-          },
-        });
+        try {
+          await supabase.functions.invoke('send-notification', {
+            body: {
+              type: 'order_update',
+              customerEmail,
+              customerName: customerName || 'Customer',
+              details: { orderId: id, status },
+            },
+          });
+        } catch (emailError) {
+          console.error('Failed to send status update email:', emailError);
+          // Don't throw - status was updated successfully
+        }
       }
     },
-    onSuccess: () => {
+    onSuccess: (_, { status }) => {
       queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
-      toast.success('Order status updated');
+      toast.success(`Order status updated to "${status}"`, {
+        description: 'Customer has been notified via email.',
+      });
+    },
+    onError: (error) => {
+      toast.error('Failed to update order status');
+      console.error(error);
     },
   });
 

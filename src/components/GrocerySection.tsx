@@ -5,8 +5,7 @@ import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Search, Loader2, Plus, ShoppingCart, Leaf } from 'lucide-react';
+import { Search, Loader2, Plus, Leaf } from 'lucide-react';
 import { toast } from 'sonner';
 
 const GrocerySection = () => {
@@ -57,7 +56,7 @@ const GrocerySection = () => {
   };
 
   return (
-    <section id="groceries" className="py-20 bg-gradient-to-b from-green-50/50 to-background dark:from-green-950/20">
+    <section id="groceries" className="py-20 bg-gradient-to-b from-secondary/30 to-background">
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <div className="text-center mb-12">
@@ -67,12 +66,12 @@ const GrocerySection = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <span className="inline-flex items-center gap-2 text-green-600 font-medium mb-2">
+            <span className="inline-flex items-center gap-2 text-primary font-medium mb-2">
               <Leaf className="h-4 w-4" />
               Grabby Groceries
             </span>
             <h2 className="font-display text-4xl md:text-5xl font-bold mb-4">
-              Fresh <span className="text-green-600">Vegetables & Fruits</span>
+              Fresh <span className="text-primary">Vegetables & Fruits</span>
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
               Farm-fresh vegetables and fruits delivered straight to your doorstep. Always fresh, always quality.
@@ -101,7 +100,7 @@ const GrocerySection = () => {
               key={category.id}
               variant={selectedCategory === category.id ? 'default' : 'outline'}
               onClick={() => setSelectedCategory(category.id)}
-              className={`rounded-full ${selectedCategory === category.id ? 'bg-green-600 hover:bg-green-700' : ''}`}
+              className="rounded-full"
             >
               <span className="mr-2">{category.icon}</span>
               {category.name}
@@ -112,7 +111,7 @@ const GrocerySection = () => {
         {/* Loading State */}
         {isLoading && (
           <div className="flex justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-green-600" />
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         )}
 
@@ -126,16 +125,18 @@ const GrocerySection = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.3, delay: index * 0.05 }}
+                whileHover={{ scale: 1.02, y: -4 }}
+                whileTap={{ scale: 0.98 }}
               >
-                <Card className="group hover:shadow-lg transition-all duration-300 overflow-hidden h-full">
+                <Card className="group cursor-pointer hover:shadow-xl transition-all duration-300 overflow-hidden h-full border-2 hover:border-primary/50">
                   <CardContent className="p-4 flex flex-col h-full">
                     <div className="text-center mb-3">
                       {item.image_url ? (
-                        <div className="w-full h-20 mb-2 flex items-center justify-center">
+                        <div className="w-full aspect-square mb-2 flex items-center justify-center bg-muted/50 rounded-lg overflow-hidden">
                           <img 
                             src={item.image_url} 
                             alt={item.name} 
-                            className="max-h-20 max-w-full object-contain rounded"
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                             onError={(e) => {
                               e.currentTarget.style.display = 'none';
                               e.currentTarget.nextElementSibling?.classList.remove('hidden');
@@ -144,17 +145,26 @@ const GrocerySection = () => {
                           <div className="hidden text-5xl">{getItemEmoji(item.category, item.name)}</div>
                         </div>
                       ) : (
-                        <div className="text-5xl mb-2">{getItemEmoji(item.category, item.name)}</div>
+                        <div className="w-full aspect-square mb-2 flex items-center justify-center bg-muted/50 rounded-lg">
+                          <span className="text-5xl transition-transform duration-300 group-hover:scale-125">
+                            {getItemEmoji(item.category, item.name)}
+                          </span>
+                        </div>
                       )}
-                      <h3 className="font-semibold text-sm line-clamp-2">{item.name}</h3>
+                      <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors">
+                        {item.name}
+                      </h3>
                       <p className="text-xs text-muted-foreground mt-1">{item.unit && `per ${item.unit}`}</p>
                     </div>
                     <div className="mt-auto flex items-center justify-between">
-                      <span className="font-bold text-green-600">{formatPrice(item.price)}</span>
+                      <span className="font-bold text-primary">{formatPrice(item.price)}</span>
                       <Button
                         size="sm"
-                        className="h-8 w-8 p-0 bg-green-600 hover:bg-green-700"
-                        onClick={() => handleAddToCart(item)}
+                        className="h-9 w-9 p-0 rounded-full transition-transform group-hover:scale-110"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAddToCart(item);
+                        }}
                       >
                         <Plus className="h-4 w-4" />
                       </Button>

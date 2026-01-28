@@ -3,7 +3,6 @@ import { Minus, Plus, Trash2, ShoppingBag, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
-import { useCreateOrder } from '@/hooks/useOrders';
 import { useAddLoyaltyPoints } from '@/hooks/useLoyaltyPoints';
 import { Button } from '@/components/ui/button';
 import { SheetHeader, SheetTitle, SheetClose } from '@/components/ui/sheet';
@@ -24,7 +23,6 @@ const CartSheet = () => {
   const navigate = useNavigate();
   const { items, updateQuantity, removeFromCart, totalPrice, clearCart } = useCart();
   const { user } = useAuth();
-  const createOrder = useCreateOrder();
   const addPoints = useAddLoyaltyPoints();
   const [isProcessing, setIsProcessing] = useState(false);
   const [deliveryLocation, setDeliveryLocation] = useState<DeliveryLocation | null>(null);
@@ -73,15 +71,41 @@ const CartSheet = () => {
 
     setIsProcessing(true);
     try {
-      const order = await createOrder.mutateAsync({
-        items: items.map(item => ({
-          id: item.id,
-          name: item.name,
-          price: item.price,
-          quantity: item.quantity,
-        })),
-        totalAmount: Math.round(totalPrice * 1.1),
-      });
+      // Create the order with location data
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .insert({
+          user_id: user.id,
+          total_amount: Math.round(totalPrice * 1.1),
+          status: 'pending',
+          payment_status: 'pending',
+          payment_method: 'pay_on_delivery',
+          delivery_address: deliveryLocation.address,
+          delivery_latitude: deliveryLocation.latitude,
+          delivery_longitude: deliveryLocation.longitude,
+          delivery_instructions: deliveryLocation.instructions || null,
+          order_type: 'delivery',
+        })
+        .select()
+        .single();
+      
+      if (orderError) throw orderError;
+      
+      // Create order items
+      const orderItems = items.map(item => ({
+        order_id: order.id,
+        menu_item_id: item.id,
+        item_name: item.name,
+        quantity: item.quantity,
+        unit_price: item.price,
+        subtotal: item.price * item.quantity,
+      }));
+      
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .insert(orderItems);
+      
+      if (itemsError) throw itemsError;
       
       // Award loyalty points (1 point per KSh 10 spent)
       const pointsEarned = Math.floor(totalPrice / 10);
@@ -106,10 +130,12 @@ const CartSheet = () => {
       );
       
       clearCart();
+      setDeliveryLocation(null);
       toast.success('Order placed successfully!', {
         description: `Your order is being prepared. You earned ${pointsEarned} loyalty points!`,
       });
     } catch (error) {
+      console.error('Order error:', error);
       toast.error('Failed to place order. Please try again.');
     } finally {
       setIsProcessing(false);
@@ -215,9 +241,9 @@ const CartSheet = () => {
               className="w-full" 
               size="lg" 
               onClick={handlePlaceOrder}
-              disabled={createOrder.isPending || isProcessing}
+              disabled={isProcessing || !deliveryLocation}
             >
-              {createOrder.isPending || isProcessing ? (
+              {isProcessing ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                   Processing...

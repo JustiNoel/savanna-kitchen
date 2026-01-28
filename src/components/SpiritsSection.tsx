@@ -52,7 +52,7 @@ const SpiritsSection = () => {
   };
 
   return (
-    <section id="spirits" className="py-20 bg-gradient-to-b from-amber-50/50 to-background dark:from-amber-950/20">
+    <section id="spirits" className="py-20 bg-gradient-to-b from-muted/50 to-background">
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <div className="text-center mb-12">
@@ -62,12 +62,12 @@ const SpiritsSection = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <span className="inline-flex items-center gap-2 text-amber-600 font-medium mb-2">
+            <span className="inline-flex items-center gap-2 text-primary font-medium mb-2">
               <Wine className="h-4 w-4" />
               Grabby Spirits
             </span>
             <h2 className="font-display text-4xl md:text-5xl font-bold mb-4">
-              Premium <span className="text-amber-600">Drinks & Spirits</span>
+              Premium <span className="text-primary">Drinks & Spirits</span>
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
               From local favorites to international brands - enjoy responsibly! 🍻
@@ -76,8 +76,8 @@ const SpiritsSection = () => {
         </div>
 
         {/* Age Verification Notice */}
-        <div className="max-w-md mx-auto mb-8 p-4 bg-amber-100 dark:bg-amber-900/30 rounded-lg text-center">
-          <p className="text-sm text-amber-800 dark:text-amber-200">
+        <div className="max-w-md mx-auto mb-8 p-4 bg-primary/10 rounded-lg text-center">
+          <p className="text-sm text-primary">
             🔞 You must be 18+ years old to purchase alcoholic beverages. Drink responsibly.
           </p>
         </div>
@@ -103,7 +103,7 @@ const SpiritsSection = () => {
               key={category.id}
               variant={selectedCategory === category.id ? 'default' : 'outline'}
               onClick={() => setSelectedCategory(category.id)}
-              className={`rounded-full ${selectedCategory === category.id ? 'bg-amber-600 hover:bg-amber-700' : ''}`}
+              className="rounded-full"
             >
               <span className="mr-2">{category.icon}</span>
               {category.name}
@@ -114,7 +114,7 @@ const SpiritsSection = () => {
         {/* Loading State */}
         {isLoading && (
           <div className="flex justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-amber-600" />
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         )}
 
@@ -128,16 +128,18 @@ const SpiritsSection = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.3, delay: index * 0.05 }}
+                whileHover={{ scale: 1.02, y: -4 }}
+                whileTap={{ scale: 0.98 }}
               >
-              <Card className="group hover:shadow-lg transition-all duration-300 overflow-hidden h-full">
+                <Card className="group cursor-pointer hover:shadow-xl transition-all duration-300 overflow-hidden h-full border-2 hover:border-primary/50">
                   <CardContent className="p-4 flex flex-col h-full">
                     <div className="text-center mb-3">
                       {item.image_url ? (
-                        <div className="w-20 h-20 mx-auto mb-2 rounded-lg overflow-hidden bg-muted">
+                        <div className="w-full aspect-square mb-2 rounded-lg overflow-hidden bg-muted/50">
                           <img 
                             src={item.image_url} 
                             alt={item.name}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                             onError={(e) => {
                               e.currentTarget.style.display = 'none';
                               e.currentTarget.parentElement!.innerHTML = `<span class="text-5xl flex items-center justify-center h-full">${getItemEmoji(item.category)}</span>`;
@@ -145,9 +147,15 @@ const SpiritsSection = () => {
                           />
                         </div>
                       ) : (
-                        <div className="text-5xl mb-2">{getItemEmoji(item.category)}</div>
+                        <div className="w-full aspect-square mb-2 flex items-center justify-center bg-muted/50 rounded-lg">
+                          <span className="text-5xl transition-transform duration-300 group-hover:scale-125">
+                            {getItemEmoji(item.category)}
+                          </span>
+                        </div>
                       )}
-                      <h3 className="font-semibold text-sm line-clamp-2">{item.name}</h3>
+                      <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors">
+                        {item.name}
+                      </h3>
                       {item.brand && (
                         <Badge variant="secondary" className="mt-1 text-xs">
                           {item.brand}
@@ -160,11 +168,14 @@ const SpiritsSection = () => {
                       )}
                     </div>
                     <div className="mt-auto flex items-center justify-between">
-                      <span className="font-bold text-amber-600">{formatPrice(item.price)}</span>
+                      <span className="font-bold text-primary">{formatPrice(item.price)}</span>
                       <Button
                         size="sm"
-                        className="h-8 w-8 p-0 bg-amber-600 hover:bg-amber-700"
-                        onClick={() => handleAddToCart(item)}
+                        className="h-9 w-9 p-0 rounded-full transition-transform group-hover:scale-110"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAddToCart(item);
+                        }}
                       >
                         <Plus className="h-4 w-4" />
                       </Button>

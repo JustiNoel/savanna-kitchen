@@ -58,7 +58,7 @@ const ShopSection = () => {
   };
 
   return (
-    <section id="shop" className="py-20 bg-gradient-to-b from-purple-50/50 to-background dark:from-purple-950/20">
+    <section id="shop" className="py-20 bg-gradient-to-b from-accent/30 to-background">
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <div className="text-center mb-12">
@@ -68,12 +68,12 @@ const ShopSection = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <span className="inline-flex items-center gap-2 text-purple-600 font-medium mb-2">
+            <span className="inline-flex items-center gap-2 text-primary font-medium mb-2">
               <Store className="h-4 w-4" />
               Grabby Shop
             </span>
             <h2 className="font-display text-4xl md:text-5xl font-bold mb-4">
-              Everyday <span className="text-purple-600">Essentials</span>
+              Everyday <span className="text-primary">Essentials</span>
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
               All your household needs in one place. From toiletries to food items - we've got you covered!
@@ -102,7 +102,7 @@ const ShopSection = () => {
               key={category.id}
               variant={selectedCategory === category.id ? 'default' : 'outline'}
               onClick={() => setSelectedCategory(category.id)}
-              className={`rounded-full ${selectedCategory === category.id ? 'bg-purple-600 hover:bg-purple-700' : ''}`}
+              className="rounded-full"
             >
               <span className="mr-2">{category.icon}</span>
               {category.name}
@@ -113,7 +113,7 @@ const ShopSection = () => {
         {/* Loading State */}
         {isLoading && (
           <div className="flex justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         )}
 
@@ -127,16 +127,18 @@ const ShopSection = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.3, delay: index * 0.05 }}
+                whileHover={{ scale: 1.02, y: -4 }}
+                whileTap={{ scale: 0.98 }}
               >
-                <Card className="group hover:shadow-lg transition-all duration-300 overflow-hidden h-full">
+                <Card className="group cursor-pointer hover:shadow-xl transition-all duration-300 overflow-hidden h-full border-2 hover:border-primary/50">
                   <CardContent className="p-4 flex flex-col h-full">
                     <div className="text-center mb-3">
                       {item.image_url ? (
-                        <div className="w-full h-20 mb-2 flex items-center justify-center">
+                        <div className="w-full aspect-square mb-2 flex items-center justify-center bg-muted/50 rounded-lg overflow-hidden">
                           <img 
                             src={item.image_url} 
                             alt={item.name} 
-                            className="max-h-20 max-w-full object-contain rounded"
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                             onError={(e) => {
                               e.currentTarget.style.display = 'none';
                               e.currentTarget.nextElementSibling?.classList.remove('hidden');
@@ -145,9 +147,15 @@ const ShopSection = () => {
                           <div className="hidden text-5xl">{getItemEmoji(item.category, item.name)}</div>
                         </div>
                       ) : (
-                        <div className="text-5xl mb-2">{getItemEmoji(item.category, item.name)}</div>
+                        <div className="w-full aspect-square mb-2 flex items-center justify-center bg-muted/50 rounded-lg">
+                          <span className="text-5xl transition-transform duration-300 group-hover:scale-125">
+                            {getItemEmoji(item.category, item.name)}
+                          </span>
+                        </div>
                       )}
-                      <h3 className="font-semibold text-sm line-clamp-2">{item.name}</h3>
+                      <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors">
+                        {item.name}
+                      </h3>
                       {item.brand && (
                         <Badge variant="secondary" className="mt-1 text-xs">
                           {item.brand}
@@ -155,11 +163,14 @@ const ShopSection = () => {
                       )}
                     </div>
                     <div className="mt-auto flex items-center justify-between">
-                      <span className="font-bold text-purple-600">{formatPrice(item.price)}</span>
+                      <span className="font-bold text-primary">{formatPrice(item.price)}</span>
                       <Button
                         size="sm"
-                        className="h-8 w-8 p-0 bg-purple-600 hover:bg-purple-700"
-                        onClick={() => handleAddToCart(item)}
+                        className="h-9 w-9 p-0 rounded-full transition-transform group-hover:scale-110"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAddToCart(item);
+                        }}
                       >
                         <Plus className="h-4 w-4" />
                       </Button>
