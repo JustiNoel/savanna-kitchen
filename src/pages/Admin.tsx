@@ -581,9 +581,23 @@ const Admin = () => {
     },
   });
 
-  // Order status mutation with email notification
+  // Order status mutation with email notification and payment verification
   const updateOrderStatus = useMutation({
-    mutationFn: async ({ id, status, customerEmail, customerName }: { id: string; status: string; customerEmail?: string; customerName?: string }) => {
+    mutationFn: async ({ id, status, customerEmail, customerName, paymentStatus, transactionCode }: { 
+      id: string; 
+      status: string; 
+      customerEmail?: string; 
+      customerName?: string;
+      paymentStatus?: string;
+      transactionCode?: string;
+    }) => {
+      // If changing to "delivered", verify payment first
+      if (status === 'delivered') {
+        if (paymentStatus !== 'paid') {
+          throw new Error('PAYMENT_NOT_VERIFIED');
+        }
+      }
+      
       const updateData: Record<string, any> = { status };
       
       // Add timestamps based on status
@@ -619,9 +633,16 @@ const Admin = () => {
         description: 'Customer has been notified via email.',
       });
     },
-    onError: (error) => {
-      toast.error('Failed to update order status');
-      console.error(error);
+    onError: (error: Error) => {
+      if (error.message === 'PAYMENT_NOT_VERIFIED') {
+        toast.error('Cannot mark as delivered!', {
+          description: 'Payment has not been verified. Please confirm payment first.',
+          duration: 5000,
+        });
+      } else {
+        toast.error('Failed to update order status');
+        console.error(error);
+      }
     },
   });
 
@@ -794,18 +815,59 @@ const Admin = () => {
     },
   });
 
-  // Assign rider to order
+  // Assign rider to order with email notification
   const assignRider = useMutation({
-    mutationFn: async ({ orderId, riderId }: { orderId: string; riderId: string }) => {
+    mutationFn: async ({ orderId, riderId, order, riderInfo }: { 
+      orderId: string; 
+      riderId: string;
+      order?: any;
+      riderInfo?: { email: string; name: string };
+    }) => {
       const { error } = await supabase
         .from('orders')
         .update({ rider_id: riderId, assigned_at: new Date().toISOString() })
         .eq('id', orderId);
       if (error) throw error;
+      
+      // Send notification to rider
+      if (riderInfo?.email && order) {
+        try {
+          // Get phone from order notes
+          const phoneMatch = order.notes?.match(/Phone:\s*(\+?\d+)/);
+          const deliveryPhone = phoneMatch ? phoneMatch[1] : order.profiles?.phone;
+          
+          await supabase.functions.invoke('send-notification', {
+            body: {
+              type: 'rider_assignment',
+              customerEmail: order.profiles?.email || '',
+              customerName: order.profiles?.full_name || 'Customer',
+              details: {
+                orderId: orderId,
+                totalAmount: order.total_amount,
+                items: order.order_items?.map((item: any) => ({
+                  name: item.item_name,
+                  quantity: item.quantity,
+                  price: item.unit_price,
+                })),
+                deliveryAddress: order.delivery_address,
+                deliveryPhone: deliveryPhone,
+                deliveryLatitude: order.delivery_latitude,
+                deliveryLongitude: order.delivery_longitude,
+                riderEmail: riderInfo.email,
+                riderName: riderInfo.name,
+              },
+            },
+          });
+        } catch (emailError) {
+          console.error('Failed to send rider notification:', emailError);
+        }
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
-      toast.success('Rider assigned to order');
+      toast.success('Rider assigned and notified via email! 🚴', {
+        description: 'Rider will see this order in their dashboard.',
+      });
     },
   });
 
@@ -1607,8 +1669,15 @@ const Admin = () => {
               <Card><CardContent className="py-12 text-center text-muted-foreground">No orders yet</CardContent></Card>
             ) : (
               <div className="grid gap-4">
-                {orders?.map((order: any) => (
-                  <Card key={order.id}>
+                {orders?.map((order: any) => {
+                  // Extract transaction code from notes
+                  const mpesaMatch = order.notes?.match(/M-Pesa:\s*([A-Z0-9]+)/i);
+                  const transactionCode = mpesaMatch ? mpesaMatch[1] : null;
+                  const phoneMatch = order.notes?.match(/Phone:\s*(\+?\d+)/);
+                  const customerPhone = phoneMatch ? phoneMatch[1] : order.profiles?.phone;
+                  
+                  return (
+                  <Card key={order.id} className={order.payment_status === 'paid' ? 'border-green-200' : ''}>
                     <CardContent className="p-4">
                       <div className="flex flex-col gap-4">
                         <div className="flex items-start justify-between">
@@ -1616,11 +1685,24 @@ const Admin = () => {
                             <p className="font-mono text-sm text-muted-foreground">#{order.id.slice(0, 8)}</p>
                             <p className="font-semibold">{order.profiles?.full_name || 'Guest'}</p>
                             <p className="text-sm text-muted-foreground">{order.profiles?.email}</p>
+                            {customerPhone && (
+                              <p className="text-sm text-muted-foreground flex items-center gap-1">
+                                <Phone className="h-3 w-3" />{customerPhone}
+                              </p>
+                            )}
                             <p className="text-sm text-muted-foreground">{format(new Date(order.created_at), 'MMM d, h:mm a')}</p>
                           </div>
                           <div className="text-right">
-                            <Badge className={getStatusColor(order.status)}>{order.status}</Badge>
-                            <p className="font-bold text-lg mt-2">KSh {order.total_amount.toLocaleString()}</p>
+                            <div className="flex gap-1 justify-end mb-1">
+                              <Badge className={getStatusColor(order.status)}>{order.status}</Badge>
+                              <Badge className={order.payment_status === 'paid' ? 'bg-green-500' : 'bg-yellow-500'}>
+                                {order.payment_status === 'paid' ? '✅ Paid' : '⏳ Pending'}
+                              </Badge>
+                            </div>
+                            <p className="font-bold text-lg">KSh {order.total_amount.toLocaleString()}</p>
+                            {transactionCode && (
+                              <p className="text-xs text-green-600 font-mono">M-Pesa: {transactionCode}</p>
+                            )}
                           </div>
                         </div>
                         <div className="bg-muted/50 rounded-lg p-3">
@@ -1638,7 +1720,17 @@ const Admin = () => {
                           </div>
                         )}
                         <div className="flex gap-2 flex-wrap">
-                          <Select value={order.status} onValueChange={(status) => updateOrderStatus.mutate({ id: order.id, status, customerEmail: order.profiles?.email, customerName: order.profiles?.full_name })}>
+                          <Select 
+                            value={order.status} 
+                            onValueChange={(status) => updateOrderStatus.mutate({ 
+                              id: order.id, 
+                              status, 
+                              customerEmail: order.profiles?.email, 
+                              customerName: order.profiles?.full_name,
+                              paymentStatus: order.payment_status,
+                              transactionCode,
+                            })}
+                          >
                             <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="pending">Pending</SelectItem>
@@ -1651,7 +1743,18 @@ const Admin = () => {
                             </SelectContent>
                           </Select>
                           {riders && riders.length > 0 && !order.rider_id && (
-                            <Select onValueChange={(riderId) => assignRider.mutate({ orderId: order.id, riderId })}>
+                            <Select onValueChange={(riderId) => {
+                              const selectedRider = riders.find((r: any) => r.id === riderId);
+                              assignRider.mutate({ 
+                                orderId: order.id, 
+                                riderId,
+                                order,
+                                riderInfo: selectedRider ? {
+                                  email: selectedRider.profiles?.email || '',
+                                  name: selectedRider.profiles?.full_name || selectedRider.phone,
+                                } : undefined,
+                              });
+                            }}>
                               <SelectTrigger className="w-[160px]"><SelectValue placeholder="Assign Rider" /></SelectTrigger>
                               <SelectContent>
                                 {riders.map((rider: any) => (
@@ -1662,6 +1765,12 @@ const Admin = () => {
                               </SelectContent>
                             </Select>
                           )}
+                          {order.rider_id && (
+                            <Badge variant="outline" className="bg-blue-50">
+                              <Bike className="h-3 w-3 mr-1" />
+                              Rider Assigned
+                            </Badge>
+                          )}
                           {order.profiles?.email && (
                             <Button variant="outline" size="sm" onClick={() => window.open(`mailto:${order.profiles.email}`)}>
                               <Mail className="h-4 w-4 mr-1" />Email
@@ -1671,7 +1780,8 @@ const Admin = () => {
                       </div>
                     </CardContent>
                   </Card>
-                ))}
+                  );
+                })}
               </div>
             )}
           </TabsContent>
