@@ -57,12 +57,24 @@ const PaymentSection = ({ totalAmount, onPaymentConfirmed, isConfirmed }: Paymen
 
     setIsVerifying(true);
     
-    // Simulate verification (in production, this would verify with M-Pesa API)
+    // 5-second verification countdown
+    let countdown = 5;
+    toast.info(`Verifying payment... ${countdown}s`);
+    
+    const verificationInterval = setInterval(() => {
+      countdown--;
+      if (countdown > 0) {
+        toast.info(`Verifying payment... ${countdown}s`, { id: 'payment-verification' });
+      }
+    }, 1000);
+    
     setTimeout(() => {
+      clearInterval(verificationInterval);
       setIsVerifying(false);
+      toast.dismiss('payment-verification');
       onPaymentConfirmed(transactionCode.trim().toUpperCase());
-      toast.success('Payment confirmed! 🎉');
-    }, 1500);
+      toast.success('Payment verified! ✅ Order is being submitted...', { duration: 3000 });
+    }, 5000);
   };
 
   if (isConfirmed) {

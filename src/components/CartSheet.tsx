@@ -118,6 +118,18 @@ const CartSheet = () => {
       
       if (itemsError) throw itemsError;
       
+      // Record payment in financial_transactions
+      await supabase.from('financial_transactions').insert({
+        order_id: order.id,
+        type: 'income',
+        category: 'order_payment',
+        amount: totalWithFee,
+        description: `Order #${order.id.slice(0, 8)} - M-Pesa Payment`,
+        payment_method: 'mpesa',
+        reference_number: code,
+        created_by: user.id,
+      });
+      
       // Award loyalty points (1 point per KSh 10 spent)
       const pointsEarned = Math.floor(totalPrice / 10);
       if (pointsEarned > 0) {

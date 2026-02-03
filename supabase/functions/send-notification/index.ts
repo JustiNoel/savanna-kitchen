@@ -12,7 +12,7 @@ const corsHeaders = {
 const ADMIN_EMAIL = "grabbysapp@gmail.com";
 
 interface NotificationRequest {
-  type: "order" | "reservation" | "order_update" | "reservation_update";
+  type: "order" | "reservation" | "order_update" | "reservation_update" | "rider_assignment";
   customerEmail: string;
   customerName: string;
   details: {
@@ -24,6 +24,13 @@ interface NotificationRequest {
     numberOfGuests?: number;
     specialRequests?: string;
     status?: string;
+    transactionCode?: string;
+    deliveryAddress?: string;
+    deliveryPhone?: string;
+    deliveryLatitude?: number;
+    deliveryLongitude?: number;
+    riderEmail?: string;
+    riderName?: string;
   };
 }
 
@@ -92,6 +99,7 @@ const handler = async (req: Request): Promise<Response> => {
             <div style="background: #2d3d2f; color: white; padding: 15px; border-radius: 8px; text-align: center;">
               <strong>Total: KSh ${details.totalAmount?.toLocaleString()}</strong>
             </div>
+            ${details.transactionCode ? `<p style="color: #5d6d5f; font-size: 14px; margin-top: 15px;">Payment: M-Pesa Code <strong>${details.transactionCode}</strong></p>` : ''}
             <p style="color: #8b8b8b; font-size: 14px; margin-top: 20px;">Order ID: ${details.orderId}</p>
             <p style="color: #8b8b8b; font-size: 14px;">Track your order in the app! 📍</p>
           </div>
@@ -100,9 +108,12 @@ const handler = async (req: Request): Promise<Response> => {
 
       adminHtml = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #d4652a;">New Order Received!</h2>
+          <h2 style="color: #d4652a;">New Order Received! 💰</h2>
           <p><strong>Customer:</strong> ${customerName} (${customerEmail})</p>
           <p><strong>Order ID:</strong> ${details.orderId}</p>
+          ${details.transactionCode ? `<p><strong>M-Pesa Code:</strong> ${details.transactionCode}</p>` : ''}
+          ${details.deliveryPhone ? `<p><strong>Phone:</strong> ${details.deliveryPhone}</p>` : ''}
+          ${details.deliveryAddress ? `<p><strong>Delivery:</strong> ${details.deliveryAddress}</p>` : ''}
           <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
             <thead><tr style="background: #f5f5f5;"><th style="padding: 10px; border: 1px solid #ddd;">Item</th><th style="padding: 10px; border: 1px solid #ddd;">Qty</th><th style="padding: 10px; border: 1px solid #ddd;">Price</th></tr></thead>
             <tbody>${itemsList}</tbody>
@@ -110,6 +121,88 @@ const handler = async (req: Request): Promise<Response> => {
           <p style="font-size: 18px;"><strong>Total: KSh ${details.totalAmount?.toLocaleString()}</strong></p>
         </div>
       `;
+    } else if (type === "rider_assignment") {
+      // Notification to rider when assigned to an order
+      const riderEmail = details.riderEmail;
+      if (!riderEmail) {
+        throw new Error('Rider email is required for rider_assignment notification');
+      }
+
+      const itemsList = details.items?.map(item => 
+        `<li>${item.quantity}x ${item.name}</li>`
+      ).join("") || "";
+
+      const googleMapsLink = details.deliveryLatitude && details.deliveryLongitude 
+        ? `https://www.google.com/maps/dir/?api=1&destination=${details.deliveryLatitude},${details.deliveryLongitude}`
+        : '';
+
+      customerSubject = "🚴 New Delivery Assignment - Grabbys";
+      customerHtml = `
+        <div style="font-family: 'DM Sans', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #faf8f5; padding: 20px;">
+          <div style="background: linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%); padding: 30px; text-align: center; border-radius: 12px 12px 0 0;">
+            <h1 style="color: white; margin: 0;">🚴 New Delivery!</h1>
+          </div>
+          <div style="background: white; padding: 30px; border-radius: 0 0 12px 12px;">
+            <h2 style="color: #2d3d2f;">You have been assigned a new delivery!</h2>
+            
+            <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin: 15px 0;">
+              <p style="margin: 0; font-weight: bold;">Order #${details.orderId?.slice(0, 8)}</p>
+              <p style="margin: 5px 0 0 0; font-size: 24px; color: #2e7d32;">KSh ${details.totalAmount?.toLocaleString()}</p>
+            </div>
+            
+            <h3 style="color: #2d3d2f; margin-top: 20px;">📦 Order Items:</h3>
+            <ul style="color: #5d6d5f;">${itemsList}</ul>
+            
+            <h3 style="color: #2d3d2f; margin-top: 20px;">📍 Delivery Details:</h3>
+            <div style="background: #faf8f5; padding: 15px; border-radius: 8px;">
+              <p style="margin: 0;"><strong>Customer:</strong> ${customerName}</p>
+              ${details.deliveryPhone ? `<p style="margin: 5px 0;"><strong>Phone:</strong> <a href="tel:${details.deliveryPhone}">${details.deliveryPhone}</a></p>` : ''}
+              <p style="margin: 5px 0;"><strong>Address:</strong> ${details.deliveryAddress || 'See app for location'}</p>
+            </div>
+            
+            ${googleMapsLink ? `
+              <a href="${googleMapsLink}" style="display: block; background: #4CAF50; color: white; padding: 15px; text-align: center; border-radius: 8px; margin-top: 20px; text-decoration: none; font-weight: bold;">
+                🗺️ Open in Google Maps
+              </a>
+            ` : ''}
+            
+            <p style="color: #8b8b8b; font-size: 14px; margin-top: 20px;">Login to your Rider Dashboard to manage this delivery.</p>
+          </div>
+        </div>
+      `;
+
+      adminHtml = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #4CAF50;">Rider Assigned to Order</h2>
+          <p><strong>Order ID:</strong> ${details.orderId}</p>
+          <p><strong>Rider:</strong> ${details.riderName} (${riderEmail})</p>
+          <p><strong>Customer:</strong> ${customerName}</p>
+          <p><strong>Delivery Address:</strong> ${details.deliveryAddress || 'N/A'}</p>
+        </div>
+      `;
+
+      // Send to rider
+      const riderResponse = await resend.emails.send({
+        from: "Grabbys <onboarding@resend.dev>",
+        to: [riderEmail],
+        subject: customerSubject,
+        html: customerHtml,
+      });
+      console.log("Rider email sent:", riderResponse);
+
+      // Send to admin
+      const adminResponse = await resend.emails.send({
+        from: "Grabbys <onboarding@resend.dev>",
+        to: [ADMIN_EMAIL],
+        subject: `🚴 Rider Assigned: Order #${details.orderId?.slice(0, 8)}`,
+        html: adminHtml,
+      });
+      console.log("Admin email sent:", adminResponse);
+
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
     } else if (type === "order_update") {
       const statusEmoji = getStatusEmoji(details.status || '');
       const statusText = getStatusText(details.status || '');
