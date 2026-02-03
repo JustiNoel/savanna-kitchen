@@ -11,12 +11,14 @@ import { toast } from 'sonner';
 import { getImageForDish } from '@/lib/foodImages';
 import { supabase } from '@/integrations/supabase/client';
 import LocationPicker from './LocationPicker';
+import PaymentSection from './PaymentSection';
 
 interface DeliveryLocation {
   address: string;
   latitude: number;
   longitude: number;
   instructions?: string;
+  phoneNumber?: string;
 }
 
 const CartSheet = () => {
@@ -26,6 +28,11 @@ const CartSheet = () => {
   const addPoints = useAddLoyaltyPoints();
   const [isProcessing, setIsProcessing] = useState(false);
   const [deliveryLocation, setDeliveryLocation] = useState<DeliveryLocation | null>(null);
+  const [paymentConfirmed, setPaymentConfirmed] = useState(false);
+  const [transactionCode, setTransactionCode] = useState('');
+  const [orderPlaced, setOrderPlaced] = useState(false);
+
+  const totalWithFee = Math.round(totalPrice * 1.1);
 
   const formatPrice = (price: number) => {
     return `KSh ${price.toLocaleString()}`;
@@ -45,7 +52,10 @@ const CartSheet = () => {
               quantity: item.quantity,
               price: item.price,
             })),
-            totalAmount: Math.round(totalPrice * 1.1),
+            totalAmount: totalWithFee,
+            transactionCode,
+            deliveryAddress: deliveryLocation?.address,
+            phoneNumber: deliveryLocation?.phoneNumber,
           },
         },
       });
@@ -58,32 +68,33 @@ const CartSheet = () => {
     }
   };
 
-  const handlePlaceOrder = async () => {
-    if (!user) {
-      toast.error('Please sign in to place an order');
-      navigate('/auth');
-      return;
-    }
-    if (!deliveryLocation) {
-      toast.error('Please set your delivery location first');
-      return;
-    }
+  const handlePaymentConfirmed = async (code: string) => {
+    setTransactionCode(code);
+    setPaymentConfirmed(true);
+    
+    // Automatically place the order after payment is confirmed
+    await placeOrder(code);
+  };
+
+  const placeOrder = async (code: string) => {
+    if (!user || !deliveryLocation) return;
 
     setIsProcessing(true);
     try {
-      // Create the order with location data
+      // Create the order with payment info
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({
           user_id: user.id,
-          total_amount: Math.round(totalPrice * 1.1),
+          total_amount: totalWithFee,
           status: 'pending',
-          payment_status: 'pending',
-          payment_method: 'pay_on_delivery',
+          payment_status: 'paid',
+          payment_method: 'mpesa_paybill',
           delivery_address: deliveryLocation.address,
           delivery_latitude: deliveryLocation.latitude,
           delivery_longitude: deliveryLocation.longitude,
           delivery_instructions: deliveryLocation.instructions || null,
+          notes: `M-Pesa: ${code}${deliveryLocation.phoneNumber ? ` | Phone: ${deliveryLocation.phoneNumber}` : ''}`,
           order_type: 'delivery',
         })
         .select()
@@ -129,14 +140,25 @@ const CartSheet = () => {
         user.user_metadata?.full_name || user.email?.split('@')[0] || 'Customer'
       );
       
-      clearCart();
-      setDeliveryLocation(null);
-      toast.success('Order placed successfully!', {
+      setOrderPlaced(true);
+      toast.success('Order placed successfully! 🎉', {
         description: `Your order is being prepared. You earned ${pointsEarned} loyalty points!`,
+        duration: 5000,
       });
+      
+      // Clear cart after a short delay to show success state
+      setTimeout(() => {
+        clearCart();
+        setDeliveryLocation(null);
+        setPaymentConfirmed(false);
+        setTransactionCode('');
+        setOrderPlaced(false);
+      }, 3000);
+      
     } catch (error) {
       console.error('Order error:', error);
       toast.error('Failed to place order. Please try again.');
+      setPaymentConfirmed(false);
     } finally {
       setIsProcessing(false);
     }
@@ -149,6 +171,24 @@ const CartSheet = () => {
         <h3 className="font-display text-xl font-semibold mb-2">Your cart is empty</h3>
         <p className="text-muted-foreground text-center">
           Add some delicious items to get started!
+        </p>
+      </div>
+    );
+  }
+
+  // Show success state
+  if (orderPlaced) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full py-12">
+        <div className="relative">
+          <div className="absolute inset-0 animate-ping bg-green-500/20 rounded-full" />
+          <div className="relative bg-green-500 rounded-full p-6">
+            <ShoppingBag className="h-12 w-12 text-white" />
+          </div>
+        </div>
+        <h3 className="font-display text-2xl font-bold text-green-600 mt-6 mb-2">Order Confirmed! 🎉</h3>
+        <p className="text-muted-foreground text-center max-w-xs">
+          Your order is being prepared and will be delivered soon.
         </p>
       </div>
     );
@@ -181,6 +221,7 @@ const CartSheet = () => {
                     size="icon"
                     className="h-7 w-7"
                     onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                    disabled={paymentConfirmed}
                   >
                     <Minus className="h-3 w-3" />
                   </Button>
@@ -190,6 +231,7 @@ const CartSheet = () => {
                     size="icon"
                     className="h-7 w-7"
                     onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                    disabled={paymentConfirmed}
                   >
                     <Plus className="h-3 w-3" />
                   </Button>
@@ -198,6 +240,7 @@ const CartSheet = () => {
                     size="icon"
                     className="h-7 w-7 ml-auto text-destructive hover:text-destructive"
                     onClick={() => removeFromCart(item.id)}
+                    disabled={paymentConfirmed}
                   >
                     <Trash2 className="h-3 w-3" />
                   </Button>
@@ -206,14 +249,37 @@ const CartSheet = () => {
             </div>
           );
         })}
-      </div>
 
-      {/* Location Picker */}
-      {user && (
-        <div className="py-4">
-          <LocationPicker onLocationSelect={setDeliveryLocation} />
-        </div>
-      )}
+        {/* Step 1: Location Picker */}
+        {user && (
+          <div className="py-2">
+            <div className="flex items-center gap-2 mb-2">
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${deliveryLocation ? 'bg-green-500 text-white' : 'bg-primary text-primary-foreground'}`}>
+                1
+              </div>
+              <span className="font-medium">Delivery Location</span>
+            </div>
+            <LocationPicker onLocationSelect={setDeliveryLocation} />
+          </div>
+        )}
+
+        {/* Step 2: Payment Section - Only show after location is set */}
+        {user && deliveryLocation && (
+          <div className="py-2">
+            <div className="flex items-center gap-2 mb-2">
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${paymentConfirmed ? 'bg-green-500 text-white' : 'bg-primary text-primary-foreground'}`}>
+                2
+              </div>
+              <span className="font-medium">Payment</span>
+            </div>
+            <PaymentSection 
+              totalAmount={totalWithFee} 
+              onPaymentConfirmed={handlePaymentConfirmed}
+              isConfirmed={paymentConfirmed}
+            />
+          </div>
+        )}
+      </div>
 
       <div className="pt-4 border-t border-border space-y-4">
         <div className="space-y-2">
@@ -228,40 +294,37 @@ const CartSheet = () => {
           <Separator />
           <div className="flex justify-between font-semibold text-lg">
             <span>Total</span>
-            <span className="text-primary">{formatPrice(Math.round(totalPrice * 1.1))}</span>
+            <span className="text-primary">{formatPrice(totalWithFee)}</span>
           </div>
-          <p className="text-xs text-muted-foreground text-center">
-            💵 Pay on delivery (Cash or M-Pesa)
-          </p>
         </div>
 
-        <div className="space-y-2">
-          <SheetClose asChild>
-            <Button 
-              className="w-full" 
-              size="lg" 
-              onClick={handlePlaceOrder}
-              disabled={isProcessing || !deliveryLocation}
-            >
-              {isProcessing ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  Processing...
-                </>
-              ) : (
-                'Place Order'
-              )}
-            </Button>
-          </SheetClose>
-          <Button variant="outline" className="w-full" onClick={clearCart}>
-            Clear Cart
-          </Button>
-        </div>
+        {isProcessing && (
+          <div className="flex items-center justify-center py-4">
+            <Loader2 className="h-6 w-6 animate-spin text-primary mr-2" />
+            <span className="text-sm text-muted-foreground">Processing your order...</span>
+          </div>
+        )}
+
+        <Button 
+          variant="outline" 
+          className="w-full" 
+          onClick={clearCart}
+          disabled={paymentConfirmed || isProcessing}
+        >
+          Clear Cart
+        </Button>
 
         {!user && (
-          <p className="text-center text-xs text-muted-foreground">
-            You'll need to sign in to complete your order
-          </p>
+          <div className="text-center space-y-2">
+            <p className="text-xs text-muted-foreground">
+              You'll need to sign in to complete your order
+            </p>
+            <SheetClose asChild>
+              <Button variant="outline" size="sm" onClick={() => navigate('/auth')}>
+                Sign In
+              </Button>
+            </SheetClose>
+          </div>
         )}
       </div>
     </div>
