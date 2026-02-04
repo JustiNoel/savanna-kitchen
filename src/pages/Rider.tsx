@@ -545,74 +545,105 @@ const Rider = () => {
                         </Badge>
                       </div>
 
-                      {/* Customer Info */}
-                      <div className="bg-muted/50 rounded-lg p-3 mb-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <User className="h-4 w-4 text-muted-foreground" />
-                            <span className="font-medium">
-                              {order.profiles?.full_name || 'Customer'}
-                            </span>
+                      {/* Customer Info - Full Details */}
+                      <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg p-4 mb-4 border border-primary/20">
+                        <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
+                          <User className="h-4 w-4 text-primary" />
+                          Customer Details
+                        </h4>
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-muted-foreground">Name:</span>
+                            <span className="font-medium">{order.profiles?.full_name || 'Customer'}</span>
                           </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => callCustomer(order.profiles?.phone || null)}
-                          >
-                            <Phone className="h-4 w-4 mr-1" />
-                            Call
-                          </Button>
+                          {order.profiles?.email && (
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm text-muted-foreground">Email:</span>
+                              <span className="text-sm font-mono">{order.profiles.email}</span>
+                            </div>
+                          )}
+                          {(() => {
+                            const phoneMatch = order.notes?.match(/Phone:\s*(\+?\d+)/);
+                            const customerPhone = phoneMatch ? phoneMatch[1] : order.profiles?.phone;
+                            return customerPhone ? (
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm text-muted-foreground">Phone:</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-mono">{customerPhone}</span>
+                                  <Button
+                                    variant="default"
+                                    size="sm"
+                                    className="h-7"
+                                    onClick={() => callCustomer(customerPhone)}
+                                  >
+                                    <Phone className="h-3 w-3 mr-1" />
+                                    Call
+                                  </Button>
+                                </div>
+                              </div>
+                            ) : null;
+                          })()}
                         </div>
                       </div>
 
                       {/* Order Items */}
                       <div className="mb-4">
-                        <p className="text-sm font-medium mb-2">Items:</p>
-                        <ul className="text-sm text-muted-foreground space-y-1">
+                        <p className="text-sm font-medium mb-2">📦 Order Items:</p>
+                        <ul className="text-sm text-muted-foreground space-y-1 bg-muted/30 rounded-lg p-3">
                           {order.order_items.map((item, idx) => (
-                            <li key={idx}>• {item.quantity}x {item.item_name}</li>
+                            <li key={idx} className="flex justify-between">
+                              <span>• {item.quantity}x {item.item_name}</span>
+                              <span className="text-primary font-medium">KSh {(item.unit_price * item.quantity).toLocaleString()}</span>
+                            </li>
                           ))}
+                          <li className="flex justify-between border-t border-border pt-2 mt-2 font-bold">
+                            <span>Total:</span>
+                            <span className="text-primary">KSh {order.total_amount.toLocaleString()}</span>
+                          </li>
                         </ul>
                       </div>
 
                       {/* Delivery Address */}
                       {order.delivery_address && (
-                        <div className="bg-muted/50 rounded-lg p-3 mb-4">
+                        <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-4 mb-4 border border-blue-200 dark:border-blue-800">
                           <div className="flex items-start gap-2 mb-2">
-                            <MapPin className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                            <div>
-                              <p className="font-medium text-sm">Delivery Address</p>
-                              <p className="text-sm text-muted-foreground">
+                            <MapPin className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                            <div className="flex-1">
+                              <p className="font-semibold text-sm text-blue-800 dark:text-blue-300">Delivery Address</p>
+                              <p className="text-sm text-blue-700 dark:text-blue-400 mt-1">
                                 {order.delivery_address}
                               </p>
                             </div>
                           </div>
                           {order.delivery_instructions && (
-                            <p className="text-xs text-muted-foreground italic pl-6">
-                              Note: {order.delivery_instructions}
+                            <p className="text-xs text-blue-600 dark:text-blue-400 italic pl-7 mb-3">
+                              📝 Note: {order.delivery_instructions}
                             </p>
                           )}
                           {order.delivery_latitude && order.delivery_longitude && (
                             <Button
-                              variant="secondary"
+                              variant="default"
                               size="sm"
-                              className="mt-2 w-full"
+                              className="w-full bg-blue-600 hover:bg-blue-700"
                               onClick={() => openNavigation(
                                 order.delivery_latitude!,
                                 order.delivery_longitude!
                               )}
                             >
                               <Navigation className="h-4 w-4 mr-2" />
-                              Open in Google Maps
+                              Navigate with Google Maps
                             </Button>
                           )}
                         </div>
                       )}
 
                       {order.notes && (
-                        <p className="text-sm text-muted-foreground mb-4">
-                          <span className="font-medium">Order Notes:</span> {order.notes}
-                        </p>
+                        <div className="bg-amber-50 dark:bg-amber-950/30 rounded-lg p-3 mb-4 border border-amber-200 dark:border-amber-800">
+                          <p className="text-sm">
+                            <span className="font-medium text-amber-800 dark:text-amber-300">📋 Order Notes:</span>{' '}
+                            <span className="text-amber-700 dark:text-amber-400">{order.notes}</span>
+                          </p>
+                        </div>
                       )}
 
                       {/* Status Update */}

@@ -99,6 +99,11 @@ const PaymentSection = ({ totalAmount, onPaymentConfirmed, isConfirmed }: Paymen
             <p className="text-sm text-green-600 dark:text-green-400 text-center">
               Your order is being prepared for delivery
             </p>
+            <div className="bg-green-200 dark:bg-green-800/50 rounded-lg p-3 mt-2">
+              <p className="text-xs text-green-700 dark:text-green-300 text-center font-medium">
+                ⏱️ Estimated delivery: ~5 minutes
+              </p>
+            </div>
           </motion.div>
         </CardContent>
       </Card>
@@ -163,10 +168,17 @@ const PaymentSection = ({ totalAmount, onPaymentConfirmed, isConfirmed }: Paymen
             <li>Go to M-Pesa → Lipa na M-Pesa → Paybill</li>
             <li>Enter Business Number: <span className="font-mono font-bold text-foreground">{PAYBILL_NUMBER}</span></li>
             <li>Enter Account Number: <span className="font-mono font-bold text-foreground">{ACCOUNT_NUMBER}</span></li>
-            <li>Enter Amount: <span className="font-bold text-foreground">{formatPrice(totalAmount)}</span></li>
+            <li>Enter <strong className="text-destructive">EXACT Amount: {formatPrice(totalAmount)}</strong></li>
             <li>Enter your M-Pesa PIN and confirm</li>
             <li>Enter the transaction code below</li>
           </ol>
+        </div>
+
+        {/* Strict Payment Notice */}
+        <div className="bg-amber-100 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-700 rounded-lg p-3">
+          <p className="text-xs text-amber-800 dark:text-amber-300 font-medium text-center">
+            ⚠️ Pay the <strong>EXACT amount ({formatPrice(totalAmount)})</strong>. Partial payments will not be accepted.
+          </p>
         </div>
 
         {/* Transaction Code Input */}

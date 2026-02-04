@@ -15,7 +15,7 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.ico", "apple-touch-icon.png", "icons/icon-192x192.png", "icons/icon-512x512.png"],
+      includeAssets: ["grabbys-logo.png"],
       manifest: {
         name: "Grabbys - Food, Grocery, Shop & Spirits",
         short_name: "Grabbys",
@@ -28,13 +28,7 @@ export default defineConfig(({ mode }) => ({
         start_url: "/",
         icons: [
           {
-            src: "/icons/icon-192x192.png",
-            sizes: "192x192",
-            type: "image/png",
-            purpose: "any maskable"
-          },
-          {
-            src: "/icons/icon-512x512.png",
+            src: "/grabbys-logo.png",
             sizes: "512x512",
             type: "image/png",
             purpose: "any maskable"

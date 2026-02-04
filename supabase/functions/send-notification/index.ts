@@ -129,7 +129,7 @@ const handler = async (req: Request): Promise<Response> => {
       }
 
       const itemsList = details.items?.map(item => 
-        `<li>${item.quantity}x ${item.name}</li>`
+        `<li style="margin: 5px 0;">${item.quantity}x ${item.name} - KSh ${(item.price * item.quantity).toLocaleString()}</li>`
       ).join("") || "";
 
       const googleMapsLink = details.deliveryLatitude && details.deliveryLongitude 
@@ -140,33 +140,45 @@ const handler = async (req: Request): Promise<Response> => {
       customerHtml = `
         <div style="font-family: 'DM Sans', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #faf8f5; padding: 20px;">
           <div style="background: linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%); padding: 30px; text-align: center; border-radius: 12px 12px 0 0;">
-            <h1 style="color: white; margin: 0;">🚴 New Delivery!</h1>
+            <h1 style="color: white; margin: 0;">🚴 New Delivery Assignment!</h1>
           </div>
           <div style="background: white; padding: 30px; border-radius: 0 0 12px 12px;">
             <h2 style="color: #2d3d2f;">You have been assigned a new delivery!</h2>
             
-            <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin: 15px 0;">
-              <p style="margin: 0; font-weight: bold;">Order #${details.orderId?.slice(0, 8)}</p>
-              <p style="margin: 5px 0 0 0; font-size: 24px; color: #2e7d32;">KSh ${details.totalAmount?.toLocaleString()}</p>
+            <div style="background: #e8f5e9; padding: 20px; border-radius: 8px; margin: 15px 0;">
+              <p style="margin: 0; font-weight: bold; font-size: 14px;">Order #${details.orderId?.slice(0, 8)}</p>
+              <p style="margin: 5px 0 0 0; font-size: 28px; color: #2e7d32; font-weight: bold;">KSh ${details.totalAmount?.toLocaleString()}</p>
             </div>
             
-            <h3 style="color: #2d3d2f; margin-top: 20px;">📦 Order Items:</h3>
-            <ul style="color: #5d6d5f;">${itemsList}</ul>
+            <h3 style="color: #2d3d2f; margin-top: 25px; border-bottom: 2px solid #e8f5e9; padding-bottom: 10px;">👤 Customer Details:</h3>
+            <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 10px 0;">
+              <table style="width: 100%;">
+                <tr><td style="padding: 5px 0; color: #666;">Name:</td><td style="padding: 5px 0; font-weight: bold;">${customerName}</td></tr>
+                <tr><td style="padding: 5px 0; color: #666;">Email:</td><td style="padding: 5px 0;">${customerEmail || 'N/A'}</td></tr>
+                ${details.deliveryPhone ? `<tr><td style="padding: 5px 0; color: #666;">Phone:</td><td style="padding: 5px 0; font-weight: bold;"><a href="tel:${details.deliveryPhone}" style="color: #4CAF50; text-decoration: none;">${details.deliveryPhone}</a></td></tr>` : ''}
+              </table>
+            </div>
             
-            <h3 style="color: #2d3d2f; margin-top: 20px;">📍 Delivery Details:</h3>
-            <div style="background: #faf8f5; padding: 15px; border-radius: 8px;">
-              <p style="margin: 0;"><strong>Customer:</strong> ${customerName}</p>
-              ${details.deliveryPhone ? `<p style="margin: 5px 0;"><strong>Phone:</strong> <a href="tel:${details.deliveryPhone}">${details.deliveryPhone}</a></p>` : ''}
-              <p style="margin: 5px 0;"><strong>Address:</strong> ${details.deliveryAddress || 'See app for location'}</p>
+            <h3 style="color: #2d3d2f; margin-top: 25px; border-bottom: 2px solid #e8f5e9; padding-bottom: 10px;">📦 Order Items:</h3>
+            <ul style="color: #5d6d5f; padding-left: 20px; background: #fafafa; border-radius: 8px; padding: 15px 15px 15px 35px;">${itemsList}</ul>
+            
+            <h3 style="color: #2d3d2f; margin-top: 25px; border-bottom: 2px solid #e8f5e9; padding-bottom: 10px;">📍 Delivery Location:</h3>
+            <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; border-left: 4px solid #2196F3;">
+              <p style="margin: 0; font-weight: bold;">${details.deliveryAddress || 'See app for location'}</p>
             </div>
             
             ${googleMapsLink ? `
-              <a href="${googleMapsLink}" style="display: block; background: #4CAF50; color: white; padding: 15px; text-align: center; border-radius: 8px; margin-top: 20px; text-decoration: none; font-weight: bold;">
-                🗺️ Open in Google Maps
+              <a href="${googleMapsLink}" style="display: block; background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); color: white; padding: 18px; text-align: center; border-radius: 8px; margin-top: 25px; text-decoration: none; font-weight: bold; font-size: 16px;">
+                🗺️ Navigate with Google Maps
               </a>
             ` : ''}
             
-            <p style="color: #8b8b8b; font-size: 14px; margin-top: 20px;">Login to your Rider Dashboard to manage this delivery.</p>
+            <div style="background: #fff3e0; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #ff9800;">
+              <p style="margin: 0; color: #e65100; font-weight: bold;">⏱️ Expected delivery time: ~5 minutes</p>
+              <p style="margin: 5px 0 0 0; color: #666; font-size: 14px;">Please start delivery immediately after picking up the order.</p>
+            </div>
+            
+            <p style="color: #8b8b8b; font-size: 14px; margin-top: 25px; text-align: center;">Login to your <a href="https://grabbys-kitchen.lovable.app/rider" style="color: #4CAF50;">Rider Dashboard</a> to manage this delivery.</p>
           </div>
         </div>
       `;

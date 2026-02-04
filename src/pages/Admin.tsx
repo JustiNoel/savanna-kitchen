@@ -84,6 +84,7 @@ interface WeeklySpecialForm {
   start_date: string;
   end_date: string;
   is_active: boolean;
+  item_source: 'food' | 'grocery' | 'shop' | 'spirits';
 }
 
 const emptyForm: MenuItemForm = {
@@ -143,6 +144,7 @@ const emptySpecialForm: WeeklySpecialForm = {
   start_date: format(new Date(), 'yyyy-MM-dd'),
   end_date: format(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
   is_active: true,
+  item_source: 'food',
 };
 
 const Admin = () => {
@@ -593,7 +595,8 @@ const Admin = () => {
     }) => {
       // If changing to "delivered", verify payment first
       if (status === 'delivered') {
-        if (paymentStatus !== 'paid') {
+        const isPaid = paymentStatus === 'paid' || paymentStatus === 'Paid' || paymentStatus?.toLowerCase() === 'paid';
+        if (!isPaid) {
           throw new Error('PAYMENT_NOT_VERIFIED');
         }
       }
@@ -636,7 +639,7 @@ const Admin = () => {
     onError: (error: Error) => {
       if (error.message === 'PAYMENT_NOT_VERIFIED') {
         toast.error('Cannot mark as delivered!', {
-          description: 'Payment has not been verified. Please confirm payment first.',
+          description: 'Payment has not been verified yet. Please ensure payment is confirmed first.',
           duration: 5000,
         });
       } else {
@@ -973,8 +976,18 @@ const Admin = () => {
     saveSpiritsItem.mutate(spiritsFormData);
   };
 
-  const handleMenuItemSelectForSpecial = (itemId: string) => {
-    const item = menuItems?.find(m => m.id === itemId);
+  const handleItemSelectForSpecial = (itemId: string, source: 'food' | 'grocery' | 'shop' | 'spirits') => {
+    let item: any = null;
+    if (source === 'food') {
+      item = menuItems?.find(m => m.id === itemId);
+    } else if (source === 'grocery') {
+      item = groceryItems?.find(g => g.id === itemId);
+    } else if (source === 'shop') {
+      item = shopItems?.find(s => s.id === itemId);
+    } else if (source === 'spirits') {
+      item = spiritsItems?.find(sp => sp.id === itemId);
+    }
+    
     if (item) {
       const discountPercent = parseInt(specialFormData.discount_percentage) || 20;
       const discountedPrice = Math.round(item.price * (1 - discountPercent / 100));
@@ -984,8 +997,13 @@ const Admin = () => {
         menu_item_name: item.name,
         original_price: item.price.toString(),
         discounted_price: discountedPrice.toString(),
+        item_source: source,
       });
     }
+  };
+
+  const handleMenuItemSelectForSpecial = (itemId: string) => {
+    handleItemSelectForSpecial(itemId, specialFormData.item_source);
   };
 
   const handleDiscountChange = (percent: string) => {
@@ -1847,11 +1865,35 @@ const Admin = () => {
                   <DialogHeader><DialogTitle>{editingSpecialId ? 'Edit Special' : 'Add Special'}</DialogTitle></DialogHeader>
                   <form onSubmit={handleSpecialSubmit} className="space-y-4">
                     <div className="space-y-2">
-                      <Label>Select Menu Item *</Label>
-                      <Select value={specialFormData.menu_item_id} onValueChange={handleMenuItemSelectForSpecial}>
-                        <SelectTrigger><SelectValue placeholder="Choose a menu item" /></SelectTrigger>
+                      <Label>Category *</Label>
+                      <Select 
+                        value={specialFormData.item_source} 
+                        onValueChange={(v: 'food' | 'grocery' | 'shop' | 'spirits') => setSpecialFormData({ ...specialFormData, item_source: v, menu_item_id: '', menu_item_name: '', original_price: '', discounted_price: '' })}
+                      >
+                        <SelectTrigger><SelectValue placeholder="Choose category" /></SelectTrigger>
                         <SelectContent>
-                          {menuItems?.map((item) => (
+                          <SelectItem value="food">🍽️ Food Menu</SelectItem>
+                          <SelectItem value="grocery">🥬 Grocery</SelectItem>
+                          <SelectItem value="shop">🏪 Shop</SelectItem>
+                          <SelectItem value="spirits">🍾 Spirits</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Select Item *</Label>
+                      <Select value={specialFormData.menu_item_id} onValueChange={(id) => handleItemSelectForSpecial(id, specialFormData.item_source)}>
+                        <SelectTrigger><SelectValue placeholder="Choose an item" /></SelectTrigger>
+                        <SelectContent>
+                          {specialFormData.item_source === 'food' && menuItems?.map((item) => (
+                            <SelectItem key={item.id} value={item.id}>{item.name} - KSh {item.price.toLocaleString()}</SelectItem>
+                          ))}
+                          {specialFormData.item_source === 'grocery' && groceryItems?.map((item) => (
+                            <SelectItem key={item.id} value={item.id}>{item.name} - KSh {item.price.toLocaleString()}</SelectItem>
+                          ))}
+                          {specialFormData.item_source === 'shop' && shopItems?.map((item) => (
+                            <SelectItem key={item.id} value={item.id}>{item.name} - KSh {item.price.toLocaleString()}</SelectItem>
+                          ))}
+                          {specialFormData.item_source === 'spirits' && spiritsItems?.map((item) => (
                             <SelectItem key={item.id} value={item.id}>{item.name} - KSh {item.price.toLocaleString()}</SelectItem>
                           ))}
                         </SelectContent>
@@ -1914,7 +1956,7 @@ const Admin = () => {
                           <p className="text-sm text-muted-foreground mt-1">{format(new Date(special.start_date), 'MMM d')} - {format(new Date(special.end_date), 'MMM d, yyyy')}</p>
                         </div>
                         <div className="flex gap-2">
-                          <Button variant="outline" size="icon" onClick={() => { setSpecialFormData({ menu_item_id: special.menu_item_id, menu_item_name: special.menu_item_name, original_price: special.original_price.toString(), discount_percentage: special.discount_percentage.toString(), discounted_price: special.discounted_price.toString(), start_date: special.start_date, end_date: special.end_date, is_active: special.is_active }); setEditingSpecialId(special.id); setSpecialDialogOpen(true); }}><Pencil className="h-4 w-4" /></Button>
+                          <Button variant="outline" size="icon" onClick={() => { setSpecialFormData({ menu_item_id: special.menu_item_id, menu_item_name: special.menu_item_name, original_price: special.original_price.toString(), discount_percentage: special.discount_percentage.toString(), discounted_price: special.discounted_price.toString(), start_date: special.start_date, end_date: special.end_date, is_active: special.is_active, item_source: 'food' }); setEditingSpecialId(special.id); setSpecialDialogOpen(true); }}><Pencil className="h-4 w-4" /></Button>
                           <Button variant="destructive" size="icon" onClick={() => deleteWeeklySpecial.mutate(special.id)}><Trash2 className="h-4 w-4" /></Button>
                         </div>
                       </div>

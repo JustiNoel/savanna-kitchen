@@ -388,6 +388,7 @@ const FinanceSection = () => {
                     <TableHead>Category</TableHead>
                     <TableHead>Description</TableHead>
                     <TableHead>Payment</TableHead>
+                    <TableHead>M-Pesa Code</TableHead>
                     <TableHead className="text-right">Amount</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -403,6 +404,13 @@ const FinanceSection = () => {
                       <TableCell className="capitalize">{txn.category}</TableCell>
                       <TableCell className="max-w-[200px] truncate">{txn.description || '-'}</TableCell>
                       <TableCell className="capitalize">{txn.payment_method || '-'}</TableCell>
+                      <TableCell>
+                        {txn.reference_number ? (
+                          <span className="font-mono text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                            {txn.reference_number}
+                          </span>
+                        ) : '-'}
+                      </TableCell>
                       <TableCell className={`text-right font-medium ${txn.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
                         {txn.type === 'income' ? '+' : '-'}{formatCurrency(txn.amount)}
                       </TableCell>
@@ -410,7 +418,7 @@ const FinanceSection = () => {
                   ))}
                   {(!transactions || transactions.length === 0) && (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                         No transactions recorded yet
                       </TableCell>
                     </TableRow>
