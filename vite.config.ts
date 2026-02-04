@@ -15,7 +15,7 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["grabbys-logo.png"],
+      includeAssets: ["grabbys-logo.png", "favicon.ico"],
       manifest: {
         name: "Grabbys - Food, Grocery, Shop & Spirits",
         short_name: "Grabbys",
@@ -36,8 +36,17 @@ export default defineConfig(({ mode }) => ({
         ],
         categories: ["food", "restaurant", "lifestyle"],
       },
+      // Force immediate updates for PWA users
+      devOptions: {
+        enabled: false,
+      },
+      selfDestroying: false,
       workbox: {
+        // Skip waiting and claim clients immediately for instant updates
+        skipWaiting: true,
+        clientsClaim: true,
         globPatterns: ["**/*.{js,css,html,ico,png,svg,jpg,jpeg,webp}"],
+        // Use NetworkFirst for HTML to always get fresh content
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -47,6 +56,18 @@ export default defineConfig(({ mode }) => ({
               expiration: {
                 maxEntries: 10,
                 maxAgeSeconds: 60 * 60 * 24 * 365,
+              },
+            },
+          },
+          {
+            // Cache images but check for updates
+            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|ico)$/i,
+            handler: "StaleWhileRevalidate",
+            options: {
+              cacheName: "images-cache",
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24 * 7, // 1 week
               },
             },
           },

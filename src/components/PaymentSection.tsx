@@ -191,76 +191,60 @@ const PaymentSection = ({ totalAmount, onPaymentConfirmed, isConfirmed }: Paymen
               <p className="text-3xl font-bold">{formatPrice(totalAmount)}</p>
             </div>
           
-          <div className="bg-white/20 rounded-lg p-3 space-y-2">
-            <p className="text-sm font-medium text-center">M-Pesa Paybill</p>
-            
-            <div className="flex items-center justify-between bg-white/10 rounded-lg p-2">
-              <div>
-                <p className="text-xs opacity-80">Paybill Number</p>
-                <p className="font-mono font-bold text-lg">{PAYBILL_NUMBER}</p>
+            <div className="bg-white/20 rounded-lg p-3 space-y-2">
+              <p className="text-sm font-medium text-center">M-Pesa Paybill</p>
+              
+              <div className="flex items-center justify-between bg-white/10 rounded-lg p-2">
+                <div>
+                  <p className="text-xs opacity-80">Paybill Number</p>
+                  <p className="font-mono font-bold text-lg">{PAYBILL_NUMBER}</p>
+                </div>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-white hover:bg-white/20"
+                  onClick={() => copyToClipboard(PAYBILL_NUMBER, 'paybill')}
+                >
+                  {copiedPaybill ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                </Button>
               </div>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="text-white hover:bg-white/20"
-                onClick={() => copyToClipboard(PAYBILL_NUMBER, 'paybill')}
-              >
-                {copiedPaybill ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-              </Button>
-            </div>
-            
-            <div className="flex items-center justify-between bg-white/10 rounded-lg p-2">
-              <div>
-                <p className="text-xs opacity-80">Account Number</p>
-                <p className="font-mono font-bold text-lg">{ACCOUNT_NUMBER}</p>
+              
+              <div className="flex items-center justify-between bg-white/10 rounded-lg p-2">
+                <div>
+                  <p className="text-xs opacity-80">Account Number</p>
+                  <p className="font-mono font-bold text-lg">{ACCOUNT_NUMBER}</p>
+                </div>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-white hover:bg-white/20"
+                  onClick={() => copyToClipboard(ACCOUNT_NUMBER, 'account')}
+                >
+                  {copiedAccount ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                </Button>
               </div>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="text-white hover:bg-white/20"
-                onClick={() => copyToClipboard(ACCOUNT_NUMBER, 'account')}
-              >
-                {copiedAccount ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-              </Button>
             </div>
           </div>
-        </div>
 
-        {/* Steps */}
-        <div className="text-sm space-y-2 bg-muted/50 p-3 rounded-lg">
-          <p className="font-medium">How to Pay:</p>
-          <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
-            <li>Go to M-Pesa → Lipa na M-Pesa → Paybill</li>
-            <li>Enter Business Number: <span className="font-mono font-bold text-foreground">{PAYBILL_NUMBER}</span></li>
-            <li>Enter Account Number: <span className="font-mono font-bold text-foreground">{ACCOUNT_NUMBER}</span></li>
-            <li>Enter <strong className="text-destructive">EXACT Amount: {formatPrice(totalAmount)}</strong></li>
-            <li>Enter your M-Pesa PIN and confirm</li>
-            <li>Enter the transaction code below</li>
-          </ol>
-        </div>
+          {/* Steps */}
+          <div className="text-sm space-y-2 bg-muted/50 p-3 rounded-lg">
+            <p className="font-medium">How to Pay:</p>
+            <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
+              <li>Go to M-Pesa → Lipa na M-Pesa → Paybill</li>
+              <li>Enter Business Number: <span className="font-mono font-bold text-foreground">{PAYBILL_NUMBER}</span></li>
+              <li>Enter Account Number: <span className="font-mono font-bold text-foreground">{ACCOUNT_NUMBER}</span></li>
+              <li>Enter <strong className="text-destructive">EXACT Amount: {formatPrice(totalAmount)}</strong></li>
+              <li>Enter your M-Pesa PIN and confirm</li>
+              <li>Click the Pay Now button below</li>
+            </ol>
+          </div>
 
-        {/* Strict Payment Notice */}
-        <div className="bg-amber-100 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-700 rounded-lg p-3">
-          <p className="text-xs text-amber-800 dark:text-amber-300 font-medium text-center">
-            ⚠️ Pay the <strong>EXACT amount ({formatPrice(totalAmount)})</strong>. Partial payments will not be accepted.
-          </p>
-        </div>
-
-        {/* Transaction Code Input */}
-        <div className="space-y-2">
-          <Label htmlFor="transaction-code">M-Pesa Transaction Code</Label>
-          <Input
-            id="transaction-code"
-            value={transactionCode}
-            onChange={(e) => setTransactionCode(e.target.value.toUpperCase())}
-            placeholder="e.g., SLK7X9HZPQ"
-            className="text-base font-mono uppercase tracking-wider"
-            maxLength={15}
-          />
-          <p className="text-xs text-muted-foreground">
-            Enter the transaction code from your M-Pesa confirmation message
-          </p>
-        </div>
+          {/* Strict Payment Notice */}
+          <div className="bg-amber-100 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-700 rounded-lg p-3">
+            <p className="text-xs text-amber-800 dark:text-amber-300 font-medium text-center">
+              ⚠️ Pay the <strong>EXACT amount ({formatPrice(totalAmount)})</strong>. Partial payments will not be accepted.
+            </p>
+          </div>
 
           {/* Quick Pay Button - Opens STK-style prompt */}
           <Button
@@ -276,7 +260,7 @@ const PaymentSection = ({ totalAmount, onPaymentConfirmed, isConfirmed }: Paymen
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">Or enter code below</span>
+              <span className="bg-background px-2 text-muted-foreground">Or enter code directly</span>
             </div>
           </div>
 
