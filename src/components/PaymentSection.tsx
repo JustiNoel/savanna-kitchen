@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle2, CreditCard, Loader2, Copy, Check } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { CheckCircle2, CreditCard, Loader2, Copy, Check, Smartphone } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface PaymentSectionProps {
@@ -21,6 +22,7 @@ const PaymentSection = ({ totalAmount, onPaymentConfirmed, isConfirmed }: Paymen
   const [isVerifying, setIsVerifying] = useState(false);
   const [copiedPaybill, setCopiedPaybill] = useState(false);
   const [copiedAccount, setCopiedAccount] = useState(false);
+  const [showPaymentPrompt, setShowPaymentPrompt] = useState(false);
 
   const formatPrice = (price: number) => {
     return `KSh ${price.toLocaleString()}`;
@@ -111,20 +113,83 @@ const PaymentSection = ({ totalAmount, onPaymentConfirmed, isConfirmed }: Paymen
   }
 
   return (
-    <Card className="border-primary/20 bg-gradient-to-br from-background to-primary/5">
-      <CardHeader className="pb-4">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <CreditCard className="h-5 w-5 text-primary" />
-          Pay via M-Pesa
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Payment Instructions */}
-        <div className="bg-gradient-to-r from-green-500 to-green-600 text-white p-4 rounded-xl space-y-3">
-          <div className="text-center">
-            <p className="text-sm opacity-90">Amount to Pay</p>
-            <p className="text-3xl font-bold">{formatPrice(totalAmount)}</p>
+    <>
+      {/* M-Pesa STK-style Payment Prompt Dialog */}
+      <Dialog open={showPaymentPrompt} onOpenChange={setShowPaymentPrompt}>
+        <DialogContent className="sm:max-w-md p-0 overflow-hidden">
+          <div className="bg-gradient-to-b from-green-600 to-green-700 text-white p-6">
+            <DialogHeader className="text-center space-y-4">
+              <div className="mx-auto w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
+                <Smartphone className="h-8 w-8" />
+              </div>
+              <DialogTitle className="text-white text-xl font-bold">M-Pesa Payment</DialogTitle>
+            </DialogHeader>
+            
+            <div className="mt-6 space-y-4 text-center">
+              <div className="bg-white/20 rounded-xl p-4">
+                <p className="text-sm opacity-80">Pay EXACT Amount</p>
+                <p className="text-4xl font-bold mt-1">{formatPrice(totalAmount)}</p>
+              </div>
+              
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between bg-white/10 rounded-lg p-3">
+                  <span className="opacity-80">Paybill Number:</span>
+                  <span className="font-mono font-bold">{PAYBILL_NUMBER}</span>
+                </div>
+                <div className="flex justify-between bg-white/10 rounded-lg p-3">
+                  <span className="opacity-80">Account Number:</span>
+                  <span className="font-mono font-bold">{ACCOUNT_NUMBER}</span>
+                </div>
+              </div>
+              
+              <div className="bg-red-500/30 border border-red-300/50 rounded-lg p-3 text-sm">
+                <p className="font-medium">⚠️ Pay EXACT amount only!</p>
+                <p className="text-xs opacity-80 mt-1">Partial payments will be rejected</p>
+              </div>
+            </div>
           </div>
+          
+          <div className="p-4 space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="prompt-code">Enter M-Pesa Code after payment</Label>
+              <Input
+                id="prompt-code"
+                value={transactionCode}
+                onChange={(e) => setTransactionCode(e.target.value.toUpperCase())}
+                placeholder="e.g., SLK7X9HZPQ"
+                className="text-lg font-mono uppercase tracking-wider text-center"
+                maxLength={15}
+              />
+            </div>
+            <Button
+              className="w-full h-12 bg-green-600 hover:bg-green-700"
+              onClick={() => {
+                setShowPaymentPrompt(false);
+                handleConfirmPayment();
+              }}
+              disabled={!transactionCode.trim()}
+            >
+              <CheckCircle2 className="h-5 w-5 mr-2" />
+              Confirm Payment
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Card className="border-primary/20 bg-gradient-to-br from-background to-primary/5">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <CreditCard className="h-5 w-5 text-primary" />
+            Pay via M-Pesa
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Payment Instructions */}
+          <div className="bg-gradient-to-r from-green-500 to-green-600 text-white p-4 rounded-xl space-y-3">
+            <div className="text-center">
+              <p className="text-sm opacity-90">Amount to Pay</p>
+              <p className="text-3xl font-bold">{formatPrice(totalAmount)}</p>
+            </div>
           
           <div className="bg-white/20 rounded-lg p-3 space-y-2">
             <p className="text-sm font-medium text-center">M-Pesa Paybill</p>
@@ -197,25 +262,60 @@ const PaymentSection = ({ totalAmount, onPaymentConfirmed, isConfirmed }: Paymen
           </p>
         </div>
 
-        <Button
-          className="w-full h-12 text-base"
-          onClick={handleConfirmPayment}
-          disabled={!transactionCode.trim() || isVerifying}
-        >
-          {isVerifying ? (
-            <>
-              <Loader2 className="h-5 w-5 animate-spin mr-2" />
-              Verifying Payment...
-            </>
-          ) : (
-            <>
-              <CheckCircle2 className="h-5 w-5 mr-2" />
-              I Have Paid - Confirm Order
-            </>
-          )}
-        </Button>
-      </CardContent>
-    </Card>
+          {/* Quick Pay Button - Opens STK-style prompt */}
+          <Button
+            className="w-full h-14 text-lg bg-green-600 hover:bg-green-700"
+            onClick={() => setShowPaymentPrompt(true)}
+          >
+            <Smartphone className="h-6 w-6 mr-2" />
+            Pay {formatPrice(totalAmount)} Now
+          </Button>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">Or enter code below</span>
+            </div>
+          </div>
+
+          {/* Transaction Code Input */}
+          <div className="space-y-2">
+            <Label htmlFor="transaction-code">M-Pesa Transaction Code</Label>
+            <Input
+              id="transaction-code"
+              value={transactionCode}
+              onChange={(e) => setTransactionCode(e.target.value.toUpperCase())}
+              placeholder="e.g., SLK7X9HZPQ"
+              className="text-base font-mono uppercase tracking-wider"
+              maxLength={15}
+            />
+            <p className="text-xs text-muted-foreground">
+              Enter the transaction code from your M-Pesa confirmation message
+            </p>
+          </div>
+
+          <Button
+            className="w-full h-12 text-base"
+            onClick={handleConfirmPayment}
+            disabled={!transactionCode.trim() || isVerifying}
+          >
+            {isVerifying ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                Verifying Payment...
+              </>
+            ) : (
+              <>
+                <CheckCircle2 className="h-5 w-5 mr-2" />
+                I Have Paid - Confirm Order
+              </>
+            )}
+          </Button>
+        </CardContent>
+      </Card>
+    </>
   );
 };
 

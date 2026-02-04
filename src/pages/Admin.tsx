@@ -593,9 +593,14 @@ const Admin = () => {
       paymentStatus?: string;
       transactionCode?: string;
     }) => {
-      // If changing to "delivered", verify payment first
-      if (status === 'delivered') {
-        const isPaid = paymentStatus === 'paid' || paymentStatus === 'Paid' || paymentStatus?.toLowerCase() === 'paid';
+      console.log('Updating order status:', { id, status, paymentStatus, transactionCode });
+      
+      // If changing to "delivering" or "delivered", verify payment first
+      if (status === 'delivering' || status === 'delivered') {
+        const normalizedPaymentStatus = paymentStatus?.toLowerCase()?.trim();
+        const isPaid = normalizedPaymentStatus === 'paid';
+        console.log('Payment check:', { normalizedPaymentStatus, isPaid });
+        
         if (!isPaid) {
           throw new Error('PAYMENT_NOT_VERIFIED');
         }
@@ -1125,58 +1130,58 @@ const Admin = () => {
 
       <main className="container mx-auto px-4 py-8">
         <Tabs defaultValue="menu" className="space-y-6">
-          <ScrollArea className="w-full">
-            <TabsList className="inline-flex w-max gap-1 p-1">
-              <TabsTrigger value="menu" className="flex items-center gap-1 text-xs sm:text-sm">
-                <UtensilsCrossed className="h-4 w-4" />
-                <span className="hidden sm:inline">Food</span>
+          <div className="overflow-x-auto -mx-4 px-4 pb-2">
+            <TabsList className="inline-flex min-w-max gap-1 p-1">
+              <TabsTrigger value="menu" className="flex items-center gap-1 px-2 py-1.5 text-xs sm:text-sm sm:px-3">
+                <UtensilsCrossed className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden xs:inline sm:inline">Food</span>
               </TabsTrigger>
-              <TabsTrigger value="groceries" className="flex items-center gap-1 text-xs sm:text-sm">
-                <Leaf className="h-4 w-4" />
-                <span className="hidden sm:inline">Grocery</span>
+              <TabsTrigger value="groceries" className="flex items-center gap-1 px-2 py-1.5 text-xs sm:text-sm sm:px-3">
+                <Leaf className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden xs:inline sm:inline">Grocery</span>
               </TabsTrigger>
-              <TabsTrigger value="shop" className="flex items-center gap-1 text-xs sm:text-sm">
-                <Store className="h-4 w-4" />
-                <span className="hidden sm:inline">Shop</span>
+              <TabsTrigger value="shop" className="flex items-center gap-1 px-2 py-1.5 text-xs sm:text-sm sm:px-3">
+                <Store className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden xs:inline sm:inline">Shop</span>
               </TabsTrigger>
-              <TabsTrigger value="spirits" className="flex items-center gap-1 text-xs sm:text-sm">
-                <Wine className="h-4 w-4" />
-                <span className="hidden sm:inline">Spirits</span>
+              <TabsTrigger value="spirits" className="flex items-center gap-1 px-2 py-1.5 text-xs sm:text-sm sm:px-3">
+                <Wine className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden xs:inline sm:inline">Spirits</span>
               </TabsTrigger>
-              <TabsTrigger value="orders" className="flex items-center gap-1 text-xs sm:text-sm">
-                <ShoppingBag className="h-4 w-4" />
-                <span className="hidden sm:inline">Orders</span>
+              <TabsTrigger value="orders" className="flex items-center gap-1 px-2 py-1.5 text-xs sm:text-sm sm:px-3">
+                <ShoppingBag className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden xs:inline sm:inline">Orders</span>
               </TabsTrigger>
-              <TabsTrigger value="reservations" className="flex items-center gap-1 text-xs sm:text-sm">
-                <CalendarDays className="h-4 w-4" />
-                <span className="hidden sm:inline">Reservations</span>
+              <TabsTrigger value="reservations" className="flex items-center gap-1 px-2 py-1.5 text-xs sm:text-sm sm:px-3">
+                <CalendarDays className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden xs:inline sm:inline">Reservations</span>
               </TabsTrigger>
-              <TabsTrigger value="specials" className="flex items-center gap-1 text-xs sm:text-sm">
-                <Sparkles className="h-4 w-4" />
-                <span className="hidden sm:inline">Specials</span>
+              <TabsTrigger value="specials" className="flex items-center gap-1 px-2 py-1.5 text-xs sm:text-sm sm:px-3">
+                <Sparkles className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden xs:inline sm:inline">Specials</span>
               </TabsTrigger>
-              <TabsTrigger value="loyalty" className="flex items-center gap-1 text-xs sm:text-sm">
-                <Trophy className="h-4 w-4" />
-                <span className="hidden sm:inline">Loyalty</span>
+              <TabsTrigger value="loyalty" className="flex items-center gap-1 px-2 py-1.5 text-xs sm:text-sm sm:px-3">
+                <Trophy className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden xs:inline sm:inline">Loyalty</span>
               </TabsTrigger>
-              <TabsTrigger value="riders" className="flex items-center gap-1 text-xs sm:text-sm">
-                <Bike className="h-4 w-4" />
-                <span className="hidden sm:inline">Riders</span>
+              <TabsTrigger value="riders" className="flex items-center gap-1 px-2 py-1.5 text-xs sm:text-sm sm:px-3">
+                <Bike className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden xs:inline sm:inline">Riders</span>
               </TabsTrigger>
-              <TabsTrigger value="admins" className="flex items-center gap-1 text-xs sm:text-sm">
-                <Shield className="h-4 w-4" />
-                <span className="hidden sm:inline">Admins</span>
+              <TabsTrigger value="admins" className="flex items-center gap-1 px-2 py-1.5 text-xs sm:text-sm sm:px-3">
+                <Shield className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden xs:inline sm:inline">Admins</span>
               </TabsTrigger>
-              <TabsTrigger value="finance" className="flex items-center gap-1 text-xs sm:text-sm">
-                <DollarSign className="h-4 w-4" />
-                <span className="hidden sm:inline">Finance</span>
+              <TabsTrigger value="finance" className="flex items-center gap-1 px-2 py-1.5 text-xs sm:text-sm sm:px-3">
+                <DollarSign className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden xs:inline sm:inline">Finance</span>
               </TabsTrigger>
-              <TabsTrigger value="inventory" className="flex items-center gap-1 text-xs sm:text-sm">
-                <Package className="h-4 w-4" />
-                <span className="hidden sm:inline">Inventory</span>
+              <TabsTrigger value="inventory" className="flex items-center gap-1 px-2 py-1.5 text-xs sm:text-sm sm:px-3">
+                <Package className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden xs:inline sm:inline">Inventory</span>
               </TabsTrigger>
             </TabsList>
-          </ScrollArea>
+          </div>
 
           {/* ============ MENU TAB ============ */}
           <TabsContent value="menu" className="space-y-4">

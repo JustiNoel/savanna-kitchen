@@ -138,6 +138,41 @@ const Rider = () => {
     checkRiderRole();
   }, [user]);
 
+  // Real-time subscription for order updates
+  useEffect(() => {
+    if (!user || !isRider) return;
+
+    const channel = supabase
+      .channel('rider-order-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'orders',
+        },
+        (payload) => {
+          console.log('Order update received:', payload);
+          // Refetch orders when there's a change
+          queryClient.invalidateQueries({ queryKey: ['rider-orders'] });
+          queryClient.invalidateQueries({ queryKey: ['available-orders'] });
+          
+          // Show notification for new assignments
+          if (payload.eventType === 'UPDATE' && payload.new?.rider_id) {
+            toast.info('🚴 New delivery assignment!', {
+              description: 'Check your active deliveries.',
+              duration: 5000,
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, isRider, queryClient]);
+
   // Fetch rider's assigned orders
   const { data: assignedOrders, isLoading: ordersLoading, refetch } = useQuery({
     queryKey: ['rider-orders', user?.id],
@@ -183,7 +218,7 @@ const Rider = () => {
       return ordersWithProfiles as Order[];
     },
     enabled: isRider === true,
-    refetchInterval: 30000, // Refresh every 30 seconds
+    refetchInterval: 15000, // Refresh every 15 seconds
   });
 
   // Fetch available orders (not yet assigned)
