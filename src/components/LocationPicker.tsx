@@ -366,6 +366,15 @@ const LocationPicker = ({ onLocationSelect, initialAddress = '' }: LocationPicke
                   exit={{ opacity: 0, height: 0 }}
                   className="space-y-4"
                 >
+                  {/* Phone number alert */}
+                  <div className="text-sm text-amber-600 bg-amber-50 dark:bg-amber-950/30 p-3 rounded-lg flex items-start gap-2 border border-amber-200 dark:border-amber-800">
+                    <Phone className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="font-medium">📞 Phone number required</p>
+                      <p className="text-xs mt-1">Please add your phone number below so our rider can contact you for delivery.</p>
+                    </div>
+                  </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="address">Delivery Address</Label>
                     <Input
@@ -386,6 +395,24 @@ const LocationPicker = ({ onLocationSelect, initialAddress = '' }: LocationPicke
                   </div>
 
                   <div className="space-y-2">
+                    <Label htmlFor="gps-phone-number" className="flex items-center gap-1">
+                      <Phone className="h-3 w-3" />
+                      Phone Number *
+                    </Label>
+                    <Input
+                      id="gps-phone-number"
+                      type="tel"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      placeholder="0712345678"
+                      className="text-base border-amber-300 focus:border-amber-500"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Required - Rider will call this number for directions
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
                     <Label htmlFor="instructions">Delivery Instructions (Optional)</Label>
                     <Textarea
                       id="instructions"
@@ -401,10 +428,17 @@ const LocationPicker = ({ onLocationSelect, initialAddress = '' }: LocationPicke
                     type="button"
                     className="w-full h-12 text-base"
                     onClick={handleConfirmLocation}
+                    disabled={!phoneNumber.trim()}
                   >
                     <CheckCircle2 className="h-5 w-5 mr-2" />
                     Confirm Delivery Location
                   </Button>
+                  
+                  {!phoneNumber.trim() && (
+                    <p className="text-xs text-center text-amber-600">
+                      ⚠️ Please enter your phone number to continue
+                    </p>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
