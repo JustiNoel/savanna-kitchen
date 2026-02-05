@@ -170,8 +170,9 @@ const LocationPicker = ({ onLocationSelect, initialAddress = '' }: LocationPicke
       return;
     }
     
-    if (isManualMode && !phoneNumber.trim()) {
-      toast.error('Please enter your phone number');
+    // Phone number is now required for both GPS and manual modes
+    if (!phoneNumber.trim()) {
+      toast.error('Please enter your phone number - required for delivery');
       return;
     }
 
