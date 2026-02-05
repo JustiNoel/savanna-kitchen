@@ -50,30 +50,30 @@ const Header = () => {
           {/* Desktop Navigation - Animated Pills */}
           <nav className="hidden md:flex items-center gap-2">
             {navItems.map((item, index) => (
-              <motion.a
+              <motion.div
                 key={item.href}
-                href={item.href}
-                className={`relative px-4 py-2 rounded-full text-sm font-semibold text-white ${item.color} shadow-lg hover:shadow-xl transition-shadow`}
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1, type: 'spring', stiffness: 300 }}
                 whileHover={{ scale: 1.1, y: -2 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <motion.span
-                  className="block"
-                  animate={{ 
-                    textShadow: ['0 0 0px rgba(255,255,255,0)', '0 0 10px rgba(255,255,255,0.5)', '0 0 0px rgba(255,255,255,0)']
-                  }}
-                  transition={{ duration: 2, repeat: Infinity, delay: index * 0.3 }}
+                <Link
+                  to={item.href}
+                  className={`relative px-4 py-2 rounded-full text-sm font-semibold text-white ${item.color} shadow-lg hover:shadow-xl transition-shadow block`}
                 >
-                  {item.label}
-                </motion.span>
-              </motion.a>
+                  <motion.span
+                    className="block"
+                    animate={{ 
+                      textShadow: ['0 0 0px rgba(255,255,255,0)', '0 0 10px rgba(255,255,255,0.5)', '0 0 0px rgba(255,255,255,0)']
+                    }}
+                    transition={{ duration: 2, repeat: Infinity, delay: index * 0.3 }}
+                  >
+                    {item.label}
+                  </motion.span>
+                </Link>
+              </motion.div>
             ))}
-            <a href="#contact" className="text-foreground/80 hover:text-primary transition-colors font-medium text-sm ml-2">
-              Contact
-            </a>
           </nav>
 
           {/* Cart & Auth */}
