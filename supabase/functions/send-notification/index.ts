@@ -10,6 +10,15 @@ const corsHeaders = {
 };
 
 const ADMIN_EMAIL = "grabbysapp@gmail.com";
+const LOGO_URL = "https://grabbys-kitchen.lovable.app/grabbys-logo.jpeg";
+
+// Email header with Grabbys logo
+const getEmailHeader = () => `
+  <div style="background: linear-gradient(135deg, #d4652a 0%, #e8a64c 100%); padding: 30px; text-align: center; border-radius: 12px 12px 0 0;">
+    <img src="${LOGO_URL}" alt="Grabbys" style="height: 60px; width: auto; margin-bottom: 10px; border-radius: 8px;" />
+    <p style="color: white; margin: 0; font-size: 14px; font-weight: bold;">— Get it fast. —</p>
+  </div>
+`;
 
 interface NotificationRequest {
   type: "order" | "reservation" | "order_update" | "reservation_update" | "rider_assignment";
@@ -80,9 +89,7 @@ const handler = async (req: Request): Promise<Response> => {
       customerSubject = "Order Confirmation - Grabbys";
       customerHtml = `
         <div style="font-family: 'DM Sans', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #faf8f5; padding: 20px;">
-          <div style="background: linear-gradient(135deg, #d4652a 0%, #e8a64c 100%); padding: 30px; text-align: center; border-radius: 12px 12px 0 0;">
-            <h1 style="color: white; margin: 0; font-family: 'Playfair Display', serif;">Grabbys 🍽️🥕🏪🍾</h1>
-          </div>
+          ${getEmailHeader()}
           <div style="background: white; padding: 30px; border-radius: 0 0 12px 12px;">
             <h2 style="color: #2d3d2f;">Thank you for your order, ${customerName}!</h2>
             <p style="color: #5d6d5f;">Your order has been received and is being prepared with care. 🚀</p>
@@ -222,9 +229,7 @@ const handler = async (req: Request): Promise<Response> => {
       customerSubject = `Order Update: ${statusText} - Grabbys`;
       customerHtml = `
         <div style="font-family: 'DM Sans', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #faf8f5; padding: 20px;">
-          <div style="background: linear-gradient(135deg, #d4652a 0%, #e8a64c 100%); padding: 30px; text-align: center; border-radius: 12px 12px 0 0;">
-            <h1 style="color: white; margin: 0; font-family: 'Playfair Display', serif;">Grabbys 🍽️</h1>
-          </div>
+          ${getEmailHeader()}
           <div style="background: white; padding: 30px; border-radius: 0 0 12px 12px;">
             <h2 style="color: #2d3d2f;">Order Status Update ${statusEmoji}</h2>
             <p style="color: #5d6d5f;">Hi ${customerName}!</p>
@@ -261,9 +266,7 @@ const handler = async (req: Request): Promise<Response> => {
       customerSubject = `Reservation Update - Grabbys`;
       customerHtml = `
         <div style="font-family: 'DM Sans', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #faf8f5; padding: 20px;">
-          <div style="background: linear-gradient(135deg, #d4652a 0%, #e8a64c 100%); padding: 30px; text-align: center; border-radius: 12px 12px 0 0;">
-            <h1 style="color: white; margin: 0; font-family: 'Playfair Display', serif;">Grabbys 🍽️</h1>
-          </div>
+          ${getEmailHeader()}
           <div style="background: white; padding: 30px; border-radius: 0 0 12px 12px;">
             <h2 style="color: #2d3d2f;">Reservation Update</h2>
             <p style="color: #5d6d5f;">Hi ${customerName}!</p>
@@ -287,9 +290,7 @@ const handler = async (req: Request): Promise<Response> => {
       customerSubject = "Reservation Confirmation - Grabbys";
       customerHtml = `
         <div style="font-family: 'DM Sans', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #faf8f5; padding: 20px;">
-          <div style="background: linear-gradient(135deg, #d4652a 0%, #e8a64c 100%); padding: 30px; text-align: center; border-radius: 12px 12px 0 0;">
-            <h1 style="color: white; margin: 0; font-family: 'Playfair Display', serif;">Grabbys 🍽️</h1>
-          </div>
+          ${getEmailHeader()}
           <div style="background: white; padding: 30px; border-radius: 0 0 12px 12px;">
             <h2 style="color: #2d3d2f;">Reservation Confirmed, ${customerName}!</h2>
             <p style="color: #5d6d5f;">We're looking forward to hosting you. 🎉</p>
@@ -323,7 +324,11 @@ const handler = async (req: Request): Promise<Response> => {
       subject: customerSubject,
       html: customerHtml,
     });
-    console.log("Customer email sent:", customerResponse);
+    console.log("Customer email sent:", JSON.stringify(customerResponse));
+    
+    if (customerResponse.error) {
+      console.error("Customer email error:", customerResponse.error.message);
+    }
 
     // Send to admin
     const adminResponse = await resend.emails.send({
@@ -338,7 +343,11 @@ const handler = async (req: Request): Promise<Response> => {
         : `📅 New Reservation from ${customerName}`,
       html: adminHtml,
     });
-    console.log("Admin email sent:", adminResponse);
+    console.log("Admin email sent:", JSON.stringify(adminResponse));
+    
+    if (adminResponse.error) {
+      console.error("Admin email error:", adminResponse.error.message);
+    }
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,

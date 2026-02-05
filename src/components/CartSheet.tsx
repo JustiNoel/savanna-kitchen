@@ -32,7 +32,8 @@ const CartSheet = () => {
   const [transactionCode, setTransactionCode] = useState('');
   const [orderPlaced, setOrderPlaced] = useState(false);
 
-  const totalWithFee = Math.round(totalPrice * 1.1);
+  const DELIVERY_FEE = 20; // Flat delivery fee in KSh
+  const totalWithFee = totalPrice + DELIVERY_FEE;
 
   const formatPrice = (price: number) => {
     return `KSh ${price.toLocaleString()}`;
@@ -300,8 +301,8 @@ const CartSheet = () => {
             <span>{formatPrice(totalPrice)}</span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Service Fee (10%)</span>
-            <span>{formatPrice(Math.round(totalPrice * 0.1))}</span>
+            <span className="text-muted-foreground">Delivery Fee 🚚</span>
+            <span>{formatPrice(DELIVERY_FEE)}</span>
           </div>
           <Separator />
           <div className="flex justify-between font-semibold text-lg">
