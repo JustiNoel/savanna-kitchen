@@ -100,6 +100,32 @@ export const useCreateTransaction = () => {
   });
 };
 
+export const useUpdateTransaction = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...data }: Partial<FinancialTransaction> & { id: string }) => {
+      const { error } = await supabase.from('financial_transactions').update(data).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['financial-transactions'] });
+    },
+  });
+};
+
+export const useDeleteTransaction = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('financial_transactions').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['financial-transactions'] });
+    },
+  });
+};
+
 export const useCreateInvoice = () => {
   const queryClient = useQueryClient();
   return useMutation({

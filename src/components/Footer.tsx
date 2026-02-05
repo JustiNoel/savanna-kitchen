@@ -1,5 +1,5 @@
 import { MapPin, Phone, Clock, Mail, Facebook, Instagram } from 'lucide-react';
-import logo from '@/assets/savanna-kitchen-logo.png';
+// Use Grabbys logo from public folder (matches favicon)
 
 const Footer = () => {
   return (
@@ -9,7 +9,7 @@ const Footer = () => {
           {/* Brand */}
           <div>
             <div className="flex items-center gap-3 mb-4">
-              <img src={logo} alt="Grabbys" className="h-12 w-12 object-contain" />
+              <img src="/grabbys-logo.jpeg" alt="Grabbys" className="h-12 w-12 object-contain rounded-lg" />
               <h3 className="font-display text-xl font-bold">
                 <span className="text-primary">Grabbys</span>
               </h3>
