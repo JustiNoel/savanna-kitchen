@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { format } from 'date-fns';
 import { 
   DollarSign, TrendingUp, TrendingDown, Receipt, FileText, 
-  Plus, Trash2, Loader2, Download, CreditCard, Wallet,
+  Plus, Trash2, Loader2, Download, CreditCard, Wallet, Pencil,
   ArrowUpRight, ArrowDownRight, PieChart
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,6 +29,8 @@ import {
   useUpdateInvoice,
   useDeleteInvoice,
   useCreateTransaction,
+  useUpdateTransaction,
+  useDeleteTransaction,
 } from '@/hooks/useFinance';
 
 const expenseCategories = [
@@ -75,10 +77,14 @@ const FinanceSection = () => {
   const updateInvoice = useUpdateInvoice();
   const deleteInvoice = useDeleteInvoice();
   const createTransaction = useCreateTransaction();
+  const updateTransaction = useUpdateTransaction();
+  const deleteTransaction = useDeleteTransaction();
 
   const [expenseDialogOpen, setExpenseDialogOpen] = useState(false);
   const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
   const [transactionDialogOpen, setTransactionDialogOpen] = useState(false);
+  const [editTransactionDialogOpen, setEditTransactionDialogOpen] = useState(false);
+  const [editingTransactionId, setEditingTransactionId] = useState<string | null>(null);
   
   const [expenseForm, setExpenseForm] = useState<ExpenseForm>({
     category: 'ingredients',
