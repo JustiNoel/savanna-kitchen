@@ -8,6 +8,7 @@ import AIHelpChat from '@/components/AIHelpChat';
 import RefreshAlert from '@/components/RefreshAlert';
 import OrderTracker from '@/components/OrderTracker';
 import DeliveryTracker from '@/components/DeliveryTracker';
+import BackButton from '@/components/BackButton';
 
 const Grocery = () => {
   return (
@@ -17,6 +18,9 @@ const Grocery = () => {
       <AIHelpChat />
       <FloatingCart />
       <main className="pt-20">
+        <div className="container mx-auto px-4 py-4">
+          <BackButton />
+        </div>
         <CategoryWeeklySpecials category="grocery" />
         <GrocerySection />
         <OrderTracker />
@@ -29,3 +33,4 @@ const Grocery = () => {
 };
 
 export default Grocery;
+

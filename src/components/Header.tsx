@@ -1,6 +1,6 @@
 import { ShoppingBag, Menu, X, User, LogIn, Settings } from 'lucide-react';
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
@@ -18,10 +18,10 @@ import ThemeToggle from './ThemeToggle';
 // Use Grabbys logo from public folder (matches favicon)
 
 const navItems = [
-  { href: '#menu', label: '🍽️ Food', color: 'bg-primary' },
-  { href: '#groceries', label: '🥕 Grocery', color: 'bg-green-600' },
-  { href: '#shop', label: '🛒 Shop', color: 'bg-purple-600' },
-  { href: '#spirits', label: '🍾 Spirits', color: 'bg-amber-600' },
+  { href: '/food', label: '🍽️ Food', color: 'bg-primary' },
+  { href: '/grocery', label: '🥕 Grocery', color: 'bg-green-600' },
+  { href: '/shop', label: '🛒 Shop', color: 'bg-purple-600' },
+  { href: '/spirits', label: '🍾 Spirits', color: 'bg-amber-600' },
 ];
 
 const Header = () => {
@@ -50,30 +50,30 @@ const Header = () => {
           {/* Desktop Navigation - Animated Pills */}
           <nav className="hidden md:flex items-center gap-2">
             {navItems.map((item, index) => (
-              <motion.a
+              <motion.div
                 key={item.href}
-                href={item.href}
-                className={`relative px-4 py-2 rounded-full text-sm font-semibold text-white ${item.color} shadow-lg hover:shadow-xl transition-shadow`}
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1, type: 'spring', stiffness: 300 }}
                 whileHover={{ scale: 1.1, y: -2 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <motion.span
-                  className="block"
-                  animate={{ 
-                    textShadow: ['0 0 0px rgba(255,255,255,0)', '0 0 10px rgba(255,255,255,0.5)', '0 0 0px rgba(255,255,255,0)']
-                  }}
-                  transition={{ duration: 2, repeat: Infinity, delay: index * 0.3 }}
+                <Link
+                  to={item.href}
+                  className={`relative px-4 py-2 rounded-full text-sm font-semibold text-white ${item.color} shadow-lg hover:shadow-xl transition-shadow block`}
                 >
-                  {item.label}
-                </motion.span>
-              </motion.a>
+                  <motion.span
+                    className="block"
+                    animate={{ 
+                      textShadow: ['0 0 0px rgba(255,255,255,0)', '0 0 10px rgba(255,255,255,0.5)', '0 0 0px rgba(255,255,255,0)']
+                    }}
+                    transition={{ duration: 2, repeat: Infinity, delay: index * 0.3 }}
+                  >
+                    {item.label}
+                  </motion.span>
+                </Link>
+              </motion.div>
             ))}
-            <a href="#contact" className="text-foreground/80 hover:text-primary transition-colors font-medium text-sm ml-2">
-              Contact
-            </a>
           </nav>
 
           {/* Cart & Auth */}
@@ -150,25 +150,21 @@ const Header = () => {
           >
             <div className="flex flex-col gap-3">
               {navItems.map((item, index) => (
-                <motion.a
+                <motion.div
                   key={item.href}
-                  href={item.href}
-                  className={`${item.color} text-white px-4 py-3 rounded-xl font-semibold text-center shadow-md`}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  onClick={() => setMobileMenuOpen(false)}
                 >
-                  {item.label}
-                </motion.a>
+                  <Link
+                    to={item.href}
+                    className={`${item.color} text-white px-4 py-3 rounded-xl font-semibold text-center shadow-md block`}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {item.label}
+                  </Link>
+                </motion.div>
               ))}
-              <a
-                href="#contact"
-                className="text-foreground/80 hover:text-primary transition-colors font-medium text-center py-2"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Contact
-              </a>
               {user && (
                 <>
                   <Link

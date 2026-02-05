@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Package, ChefHat, Truck, CheckCircle, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
@@ -16,13 +16,12 @@ const statusSteps = [
 const OrderTracker = () => {
   const { user } = useAuth();
   const { data: orders = [], refetch } = useOrders();
-  const [activeOrders, setActiveOrders] = useState<Order[]>([]);
-
-  useEffect(() => {
-    // Filter orders that are not delivered yet
-    const active = orders.filter(o => o.status !== 'delivered' && o.status !== 'cancelled');
-    setActiveOrders(active);
+  
+  // Use useMemo instead of useEffect + useState to avoid re-render loops
+  const activeOrders = useMemo(() => {
+    return orders.filter(o => o.status !== 'delivered' && o.status !== 'cancelled');
   }, [orders]);
+
 
   useEffect(() => {
     if (!user) return;

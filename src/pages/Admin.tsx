@@ -814,12 +814,26 @@ const Admin = () => {
 
   const removeRider = useMutation({
     mutationFn: async ({ riderId, userId }: { riderId: string; userId: string }) => {
-      await supabase.from('riders').delete().eq('id', riderId);
-      await supabase.from('user_roles').delete().eq('user_id', userId).eq('role', 'rider');
+      // Delete rider profile first
+      const { error: riderError } = await supabase.from('riders').delete().eq('id', riderId);
+      if (riderError) {
+        console.error('Rider delete error:', riderError);
+        throw new Error('Failed to remove rider profile: ' + riderError.message);
+      }
+      
+      // Then remove rider role
+      const { error: roleError } = await supabase.from('user_roles').delete().eq('user_id', userId).eq('role', 'rider');
+      if (roleError) {
+        console.error('Role delete error:', roleError);
+        throw new Error('Failed to remove rider role: ' + roleError.message);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-riders'] });
       toast.success('Rider removed successfully');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to remove rider');
     },
   });
 
