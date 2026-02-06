@@ -3,5 +3,5 @@ project_id = "afcrvtsgydhczfjtxbop"
 [functions.send-notification]
 verify_jwt = false
 
-[functions.equity-stk-push]
+[functions.mpesa-stk-push]
 verify_jwt = false

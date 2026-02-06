@@ -28,22 +28,17 @@ const PaymentSection = ({ totalAmount, onPaymentConfirmed, isConfirmed, phoneNum
   };
 
   const formatPhoneNumber = (phone: string) => {
-    // Remove all non-numeric characters
     let cleaned = phone.replace(/\D/g, '');
-    
-    // Handle different formats
     if (cleaned.startsWith('254')) {
       cleaned = cleaned.substring(3);
     } else if (cleaned.startsWith('0')) {
       cleaned = cleaned.substring(1);
     }
-    
     return cleaned;
   };
 
   const validatePhoneNumber = (phone: string) => {
     const cleaned = formatPhoneNumber(phone);
-    // Kenyan mobile numbers are 9 digits after country code
     return cleaned.length === 9 && /^[17]\d{8}$/.test(cleaned);
   };
 
@@ -54,7 +49,7 @@ const PaymentSection = ({ totalAmount, onPaymentConfirmed, isConfirmed, phoneNum
     }
 
     if (!validatePhoneNumber(phoneNumber)) {
-      toast.error('Please enter a valid Kenyan phone number (e.g., 0712345678)');
+      toast.error('Please enter a valid Safaricom phone number (e.g., 0712345678)');
       return;
     }
 
@@ -62,9 +57,9 @@ const PaymentSection = ({ totalAmount, onPaymentConfirmed, isConfirmed, phoneNum
     const reference = `GRB-${Date.now()}`;
 
     try {
-      toast.loading('Initiating payment request...', { id: 'stk-push' });
+      toast.loading('Sending M-Pesa payment request...', { id: 'stk-push' });
 
-      const { data, error } = await supabase.functions.invoke('equity-stk-push', {
+      const { data, error } = await supabase.functions.invoke('mpesa-stk-push', {
         body: {
           phoneNumber: phoneNumber,
           amount: totalAmount,
@@ -81,11 +76,11 @@ const PaymentSection = ({ totalAmount, onPaymentConfirmed, isConfirmed, phoneNum
         setTransactionId(data.transactionId || reference);
         setShowPinPrompt(true);
         toast.dismiss('stk-push');
-        toast.success('Payment request sent! Check your phone for the Equity Bank prompt.', {
+        toast.success('M-Pesa payment request sent! Check your phone.', {
           duration: 5000,
         });
       } else {
-        throw new Error(data.error || 'Failed to initiate payment');
+        throw new Error(data.error || 'Failed to initiate M-Pesa payment');
       }
     } catch (error) {
       console.error('STK Push error:', error);
@@ -99,18 +94,17 @@ const PaymentSection = ({ totalAmount, onPaymentConfirmed, isConfirmed, phoneNum
   const handlePinConfirmation = () => {
     setPinEntered(true);
     setShowPinPrompt(false);
-    
-    // 5-second verification countdown
+
     let countdown = 5;
     toast.info(`Verifying payment... ${countdown}s`, { id: 'payment-verification' });
-    
+
     const verificationInterval = setInterval(() => {
       countdown--;
       if (countdown > 0) {
         toast.info(`Verifying payment... ${countdown}s`, { id: 'payment-verification' });
       }
     }, 1000);
-    
+
     setTimeout(() => {
       clearInterval(verificationInterval);
       toast.dismiss('payment-verification');
@@ -154,52 +148,44 @@ const PaymentSection = ({ totalAmount, onPaymentConfirmed, isConfirmed, phoneNum
 
   return (
     <>
-      {/* Equity Bank PIN Entry Prompt Dialog */}
+      {/* M-Pesa PIN Entry Prompt Dialog */}
       <Dialog open={showPinPrompt} onOpenChange={setShowPinPrompt}>
         <DialogContent className="sm:max-w-md p-0 overflow-hidden">
-          <div className="bg-gradient-to-b from-red-600 to-red-700 text-white p-6">
+          <div className="bg-gradient-to-b from-green-600 to-green-700 text-white p-6">
             <DialogHeader className="text-center space-y-4">
               <div className="mx-auto w-20 h-20 bg-white rounded-full flex items-center justify-center">
-                <img 
-                  src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Equity_Bank_Kenya_Logo.svg/200px-Equity_Bank_Kenya_Logo.svg.png" 
-                  alt="Equity Bank"
-                  className="h-12 w-12 object-contain"
-                  onError={(e) => {
-                    e.currentTarget.src = '';
-                    e.currentTarget.parentElement!.innerHTML = '<span class="text-3xl">🏦</span>';
-                  }}
-                />
+                <span className="text-4xl">📱</span>
               </div>
-              <DialogTitle className="text-white text-xl font-bold">Equity Bank Payment</DialogTitle>
+              <DialogTitle className="text-white text-xl font-bold">M-Pesa Payment</DialogTitle>
             </DialogHeader>
-            
+
             <div className="mt-6 space-y-4 text-center">
               <div className="bg-white/20 rounded-xl p-4">
                 <p className="text-sm opacity-80">Pay EXACT Amount</p>
                 <p className="text-4xl font-bold mt-1">{formatPrice(totalAmount)}</p>
               </div>
-              
+
               <div className="bg-white/20 rounded-lg p-4 text-left space-y-2">
                 <p className="font-medium text-center">📱 Check Your Phone</p>
                 <p className="text-sm opacity-90">
-                  A payment prompt has been sent to your phone. 
-                  Enter your Equity Bank PIN to authorize the payment.
+                  An M-Pesa payment prompt has been sent to your phone.
+                  Enter your M-Pesa PIN to authorize the payment.
                 </p>
               </div>
-              
+
               <div className="bg-yellow-500/30 border border-yellow-300/50 rounded-lg p-3 text-sm">
-                <p className="font-medium">⚠️ Do NOT share your PIN!</p>
-                <p className="text-xs opacity-80 mt-1">Equity Bank will never ask for your PIN via call or SMS</p>
+                <p className="font-medium">⚠️ Do NOT share your M-Pesa PIN!</p>
+                <p className="text-xs opacity-80 mt-1">Safaricom will never ask for your PIN via call or SMS</p>
               </div>
             </div>
           </div>
-          
+
           <div className="p-4 space-y-4">
             <p className="text-sm text-muted-foreground text-center">
-              After entering your PIN on your phone, click confirm below
+              After entering your M-Pesa PIN on your phone, click confirm below
             </p>
             <Button
-              className="w-full h-12 bg-red-600 hover:bg-red-700"
+              className="w-full h-12 bg-green-600 hover:bg-green-700"
               onClick={handlePinConfirmation}
             >
               <CheckCircle2 className="h-5 w-5 mr-2" />
@@ -209,32 +195,32 @@ const PaymentSection = ({ totalAmount, onPaymentConfirmed, isConfirmed, phoneNum
         </DialogContent>
       </Dialog>
 
-      <Card className="border-primary/20 bg-gradient-to-br from-background to-red-50 dark:to-red-950/20">
+      <Card className="border-primary/20 bg-gradient-to-br from-background to-green-50 dark:to-green-950/20">
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2 text-lg">
-            <CreditCard className="h-5 w-5 text-red-600" />
-            Pay via Equity Bank
+            <CreditCard className="h-5 w-5 text-green-600" />
+            Pay via M-Pesa
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Payment Details */}
-          <div className="bg-gradient-to-r from-red-600 to-red-700 text-white p-4 rounded-xl space-y-3">
+          <div className="bg-gradient-to-r from-green-600 to-green-700 text-white p-4 rounded-xl space-y-3">
             <div className="text-center">
               <p className="text-sm opacity-90">Amount to Pay</p>
               <p className="text-3xl font-bold">{formatPrice(totalAmount)}</p>
             </div>
-          
+
             <div className="bg-white/20 rounded-lg p-3 space-y-2">
-              <p className="text-sm font-medium text-center">Equity Bank Paybill</p>
+              <p className="text-sm font-medium text-center">Lipa Na M-Pesa (Paybill)</p>
               <p className="text-xs text-center opacity-80">
-                Payment will be processed via STK Push - you'll receive a prompt on your phone
+                Payment will be sent via STK Push — you'll receive a prompt on your phone
               </p>
             </div>
           </div>
 
           {/* Phone Number Input */}
           <div className="space-y-2">
-            <Label htmlFor="phone-number">Phone Number (Equity Bank Registered)</Label>
+            <Label htmlFor="phone-number">Safaricom Phone Number</Label>
             <Input
               id="phone-number"
               value={phoneNumber}
@@ -245,7 +231,7 @@ const PaymentSection = ({ totalAmount, onPaymentConfirmed, isConfirmed, phoneNum
               type="tel"
             />
             <p className="text-xs text-muted-foreground">
-              Enter the phone number linked to your Equity Bank account
+              Enter the phone number registered with M-Pesa
             </p>
           </div>
 
@@ -257,8 +243,8 @@ const PaymentSection = ({ totalAmount, onPaymentConfirmed, isConfirmed, phoneNum
             </p>
             <ol className="list-decimal list-inside space-y-1 text-muted-foreground text-xs">
               <li>Click "Pay Now" button below</li>
-              <li>You'll receive a payment prompt on your phone</li>
-              <li>Enter your Equity Bank PIN to authorize</li>
+              <li>You'll receive an M-Pesa prompt on your phone</li>
+              <li>Enter your M-Pesa PIN to authorize</li>
               <li>Payment is automatically confirmed</li>
             </ol>
           </div>
@@ -273,14 +259,14 @@ const PaymentSection = ({ totalAmount, onPaymentConfirmed, isConfirmed, phoneNum
 
           {/* Pay Button */}
           <Button
-            className="w-full h-14 text-lg bg-red-600 hover:bg-red-700"
+            className="w-full h-14 text-lg bg-green-600 hover:bg-green-700"
             onClick={initiateSTKPush}
             disabled={isProcessing || !phoneNumber.trim()}
           >
             {isProcessing ? (
               <>
                 <Loader2 className="h-6 w-6 animate-spin mr-2" />
-                Sending Payment Request...
+                Sending M-Pesa Request...
               </>
             ) : (
               <>
@@ -291,7 +277,7 @@ const PaymentSection = ({ totalAmount, onPaymentConfirmed, isConfirmed, phoneNum
           </Button>
 
           <p className="text-xs text-center text-muted-foreground">
-            Secure payment powered by Equity Bank Jenga API
+            Secure payment via Safaricom M-Pesa
           </p>
         </CardContent>
       </Card>
