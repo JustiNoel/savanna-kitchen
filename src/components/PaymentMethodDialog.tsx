@@ -44,7 +44,7 @@ const paymentMethods = [
   {
     id: 'mobile_money',
     name: 'Mobile Money Transfer',
-    description: 'Airtel Money, T-Kash, etc.',
+    description: 'Airtel Money, T-Kash, M-pesa etc.',
     icon: Wallet,
     color: 'text-purple-600',
   },
