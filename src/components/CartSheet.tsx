@@ -289,6 +289,7 @@ const CartSheet = () => {
               totalAmount={totalWithFee} 
               onPaymentConfirmed={handlePaymentConfirmed}
               isConfirmed={paymentConfirmed}
+              phoneNumber={deliveryLocation?.phoneNumber}
             />
           </div>
         )}
