@@ -90,7 +90,7 @@ const CartSheet = () => {
           total_amount: totalWithFee,
           status: 'pending',
           payment_status: 'paid',
-          payment_method: 'mpesa_paybill',
+          payment_method: 'mpesa',
           delivery_address: deliveryLocation.address,
           delivery_latitude: deliveryLocation.latitude,
           delivery_longitude: deliveryLocation.longitude,
