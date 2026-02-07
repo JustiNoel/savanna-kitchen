@@ -1,72 +1,50 @@
 
+# Fix M-Pesa STK Push -- Switch to Sandbox API
 
-# Fix Plan: Order Status & Logo Update
-
-## Problem Summary
-
-### Issue 1: Order Status Updates Failing
-**Root Cause**: Database check constraint mismatch
-
-The `orders` table has a constraint that only allows these status values:
-- `pending`, `confirmed`, `preparing`, `ready`, `completed`, `cancelled`
-
-But the Admin panel is trying to set:
-- `delivering` and `delivered`
-
-This causes the PostgreSQL error: `new row for relation "orders" violates check constraint "orders_status_check"`
-
-### Issue 2: Header Logo Still Shows Old Import
-The Header component imports `savanna-kitchen-logo.png` instead of the new Grabbys logo.
-
----
+## Problem
+The edge function is calling the **production** Safaricom API (`api.safaricom.co.ke`), but your Daraja credentials were created for the **sandbox** environment (`sandbox.safaricom.co.ke`). This causes a `400 Bad Request` on authentication every time.
 
 ## Solution
+Update the `mpesa-stk-push` edge function to use the sandbox API endpoints and add an environment toggle so you can easily switch to production later when you go live.
 
-### Part 1: Fix Database Constraint (Migration)
+## Changes
 
-Run a database migration to update the check constraint to include the new status values:
+### 1. Update `supabase/functions/mpesa-stk-push/index.ts`
+- Change the API URLs from production to sandbox:
+  - Auth URL: `https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials`
+  - STK URL: `https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest`
+- Read an optional `MPESA_ENVIRONMENT` secret (defaults to `sandbox`) so you can switch to `production` later by just changing one value
+- Add enhanced error logging that captures the full response body when auth fails, making future debugging easier
+- Update the CallbackURL placeholder to use the project's actual domain
 
-```sql
--- Drop the old constraint
-ALTER TABLE orders DROP CONSTRAINT IF EXISTS orders_status_check;
+### 2. Clean up unused secrets
+- Remove the old Equity Bank secrets that are no longer needed: `JENGA_API_KEY`, `JENGA_API_SECRET`, `JENGA_MERCHANT_CODE`, `EQUITY_PAYBILL_NUMBER`, `EQUITY_ACCOUNT_NUMBER`
 
--- Add new constraint with all needed status values
-ALTER TABLE orders ADD CONSTRAINT orders_status_check 
-CHECK (status = ANY (ARRAY['pending', 'confirmed', 'preparing', 'ready', 'delivering', 'delivered', 'completed', 'cancelled']));
+## How it works after the fix
+
+```text
+User clicks "Pay Now"
+       |
+       v
+Edge function reads MPESA_ENVIRONMENT (default: "sandbox")
+       |
+       v
+Calls sandbox.safaricom.co.ke/oauth  (instead of api.safaricom.co.ke)
+       |
+       v
+Gets access token successfully
+       |
+       v
+Sends STK Push to sandbox API
+       |
+       v
+User receives M-Pesa prompt on phone (sandbox simulated)
 ```
 
-This adds `delivering` and `delivered` as valid status options.
+## Going Live Later
+When you're ready for real payments, you just need to:
+1. Complete the "Go Live" process on the Daraja portal
+2. Update your secrets with the production consumer key/secret
+3. Add an `MPESA_ENVIRONMENT` secret with value `production`
 
-### Part 2: Update Header Logo
-
-**File**: `src/components/Header.tsx`
-
-Change the import from:
-```typescript
-import logo from '@/assets/savanna-kitchen-logo.png';
-```
-
-To:
-```typescript
-// Use the Grabbys logo from public folder (same as favicon)
-```
-
-And update the img src to use `/grabbys-logo.png` directly.
-
----
-
-## Technical Details
-
-### Database Change
-- Migration updates the `orders_status_check` constraint
-- No data changes needed - existing orders remain valid
-- New statuses become available immediately after migration
-
-### Files Modified
-1. `src/components/Header.tsx` - Update logo import to use Grabbys logo
-
-### Expected Outcome
-- Order status changes from "ready" to "delivering" to "delivered" will work
-- Header logo matches the favicon (Grabbys branding)
-- No more "failed to update status" errors
-
+No code changes needed -- it will automatically switch to the production URLs.
