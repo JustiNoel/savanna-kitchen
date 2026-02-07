@@ -5,9 +5,14 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Safaricom Daraja API endpoints
-const DARAJA_AUTH_URL = "https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials";
-const DARAJA_STK_URL = "https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest";
+// Determine environment from secret (defaults to "sandbox")
+function getApiBaseUrl(): string {
+  const env = (Deno.env.get("MPESA_ENVIRONMENT") || "sandbox").toLowerCase();
+  if (env === "production") {
+    return "https://api.safaricom.co.ke";
+  }
+  return "https://sandbox.safaricom.co.ke";
+}
 
 interface STKPushRequest {
   phoneNumber: string;
@@ -17,11 +22,13 @@ interface STKPushRequest {
 }
 
 async function getDarajaAccessToken(consumerKey: string, consumerSecret: string): Promise<string> {
-  console.log("Fetching Daraja access token...");
+  const baseUrl = getApiBaseUrl();
+  const authUrl = `${baseUrl}/oauth/v1/generate?grant_type=client_credentials`;
+  console.log(`Fetching Daraja access token from: ${authUrl}`);
 
   const credentials = btoa(`${consumerKey}:${consumerSecret}`);
 
-  const response = await fetch(DARAJA_AUTH_URL, {
+  const response = await fetch(authUrl, {
     method: "GET",
     headers: {
       "Authorization": `Basic ${credentials}`,
@@ -29,15 +36,20 @@ async function getDarajaAccessToken(consumerKey: string, consumerSecret: string)
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
-    console.error("Daraja auth failed:", response.status, errorText);
-    throw new Error(`Daraja authentication failed: ${response.status}`);
+    const errorBody = await response.text();
+    console.error("Daraja auth failed:", {
+      status: response.status,
+      statusText: response.statusText,
+      body: errorBody,
+      url: authUrl,
+    });
+    throw new Error(`Daraja authentication failed (${response.status}): ${errorBody}`);
   }
 
   const contentType = response.headers.get("content-type");
   if (!contentType?.includes("application/json")) {
     const textResponse = await response.text();
-    console.error("Daraja auth returned non-JSON:", textResponse.substring(0, 200));
+    console.error("Daraja auth returned non-JSON:", textResponse.substring(0, 500));
     throw new Error("Daraja API returned an invalid response during authentication.");
   }
 
@@ -58,8 +70,7 @@ function generateTimestamp(): string {
 }
 
 function generatePassword(shortcode: string, passkey: string, timestamp: string): string {
-  const rawPassword = `${shortcode}${passkey}${timestamp}`;
-  return btoa(rawPassword);
+  return btoa(`${shortcode}${passkey}${timestamp}`);
 }
 
 function formatPhoneNumber(phone: string): string {
@@ -81,11 +92,17 @@ async function initiateSTKPush(
   accountNumber: string,
   request: STKPushRequest
 ) {
-  console.log("Initiating M-Pesa STK Push for phone:", request.phoneNumber);
+  const baseUrl = getApiBaseUrl();
+  const stkUrl = `${baseUrl}/mpesa/stkpush/v1/processrequest`;
+  console.log(`Initiating M-Pesa STK Push via: ${stkUrl}`);
+  console.log(`Phone: ${request.phoneNumber}, Amount: ${request.amount}`);
 
   const timestamp = generateTimestamp();
   const password = generatePassword(shortcode, passkey, timestamp);
   const formattedPhone = formatPhoneNumber(request.phoneNumber);
+
+  // Use project domain for callback
+  const callbackUrl = `https://afcrvtsgydhczfjtxbop.supabase.co/functions/v1/mpesa-stk-push`;
 
   const payload = {
     BusinessShortCode: shortcode,
@@ -96,7 +113,7 @@ async function initiateSTKPush(
     PartyA: formattedPhone,
     PartyB: shortcode,
     PhoneNumber: formattedPhone,
-    CallBackURL: "https://mydomain.com/path", // Placeholder - ideally a webhook
+    CallBackURL: callbackUrl,
     AccountReference: accountNumber,
     TransactionDesc: request.description || "Grabbys Kitchen Order",
   };
@@ -107,7 +124,7 @@ async function initiateSTKPush(
   const timeoutId = setTimeout(() => controller.abort(), 90000);
 
   try {
-    const response = await fetch(DARAJA_STK_URL, {
+    const response = await fetch(stkUrl, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${accessToken}`,
@@ -122,7 +139,7 @@ async function initiateSTKPush(
     const contentType = response.headers.get("content-type");
     if (!contentType?.includes("application/json")) {
       const textResponse = await response.text();
-      console.error("Daraja STK Push returned non-JSON:", textResponse.substring(0, 200));
+      console.error("Daraja STK Push returned non-JSON:", textResponse.substring(0, 500));
       throw new Error("M-Pesa API returned an invalid response. Please try again.");
     }
 
@@ -164,6 +181,9 @@ serve(async (req) => {
   }
 
   try {
+    const env = (Deno.env.get("MPESA_ENVIRONMENT") || "sandbox").toLowerCase();
+    console.log(`M-Pesa environment: ${env}`);
+
     const MPESA_CONSUMER_KEY = Deno.env.get("MPESA_CONSUMER_KEY");
     const MPESA_CONSUMER_SECRET = Deno.env.get("MPESA_CONSUMER_SECRET");
     const MPESA_PASSKEY = Deno.env.get("MPESA_PASSKEY");
