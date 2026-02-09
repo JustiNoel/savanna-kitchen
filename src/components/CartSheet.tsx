@@ -95,7 +95,7 @@ const CartSheet = () => {
           delivery_latitude: deliveryLocation.latitude,
           delivery_longitude: deliveryLocation.longitude,
           delivery_instructions: deliveryLocation.instructions || null,
-          notes: `M-Pesa: ${code}${deliveryLocation.phoneNumber ? ` | Phone: ${deliveryLocation.phoneNumber}` : ''}`,
+          notes: `Paystack: ${code}${deliveryLocation.phoneNumber ? ` | Phone: ${deliveryLocation.phoneNumber}` : ''}`,
           order_type: 'delivery',
         })
         .select()
