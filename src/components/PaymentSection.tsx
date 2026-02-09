@@ -4,8 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { CheckCircle2, CreditCard, Loader2, Smartphone, AlertCircle } from 'lucide-react';
+import { CheckCircle2, CreditCard, Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -16,40 +15,15 @@ interface PaymentSectionProps {
   phoneNumber?: string;
 }
 
-const PaymentSection = ({ totalAmount, onPaymentConfirmed, isConfirmed, phoneNumber: initialPhone }: PaymentSectionProps) => {
-  const [phoneNumber, setPhoneNumber] = useState(initialPhone || '');
+const PaymentSection = ({ totalAmount, onPaymentConfirmed, isConfirmed, phoneNumber }: PaymentSectionProps) => {
+  const [email, setEmail] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [showPinPrompt, setShowPinPrompt] = useState(false);
-  const [transactionId, setTransactionId] = useState('');
-  const [pinEntered, setPinEntered] = useState(false);
 
-  const formatPrice = (price: number) => {
-    return `KSh ${price.toLocaleString()}`;
-  };
+  const formatPrice = (price: number) => `KSh ${price.toLocaleString()}`;
 
-  const formatPhoneNumber = (phone: string) => {
-    let cleaned = phone.replace(/\D/g, '');
-    if (cleaned.startsWith('254')) {
-      cleaned = cleaned.substring(3);
-    } else if (cleaned.startsWith('0')) {
-      cleaned = cleaned.substring(1);
-    }
-    return cleaned;
-  };
-
-  const validatePhoneNumber = (phone: string) => {
-    const cleaned = formatPhoneNumber(phone);
-    return cleaned.length === 9 && /^[17]\d{8}$/.test(cleaned);
-  };
-
-  const initiateSTKPush = async () => {
-    if (!phoneNumber.trim()) {
-      toast.error('Please enter your phone number');
-      return;
-    }
-
-    if (!validatePhoneNumber(phoneNumber)) {
-      toast.error('Please enter a valid Safaricom phone number (e.g., 0712345678)');
+  const handlePaystackPayment = async () => {
+    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast.error('Please enter a valid email address');
       return;
     }
 
@@ -57,60 +31,57 @@ const PaymentSection = ({ totalAmount, onPaymentConfirmed, isConfirmed, phoneNum
     const reference = `GRB-${Date.now()}`;
 
     try {
-      toast.loading('Sending M-Pesa payment request...', { id: 'stk-push' });
+      toast.loading('Initializing payment...', { id: 'paystack-init' });
 
-      const { data, error } = await supabase.functions.invoke('mpesa-stk-push', {
+      const { data, error } = await supabase.functions.invoke('paystack-initialize', {
         body: {
-          phoneNumber: phoneNumber,
+          email,
           amount: totalAmount,
-          reference: reference,
-          description: `Grabbys Kitchen Order - ${formatPrice(totalAmount)}`,
+          reference,
+          metadata: { phone: phoneNumber || '', source: 'grabbys-kitchen' },
         },
       });
 
-      if (error) {
-        throw new Error(error.message);
-      }
+      toast.dismiss('paystack-init');
 
-      if (data.success) {
-        setTransactionId(data.transactionId || reference);
-        setShowPinPrompt(true);
-        toast.dismiss('stk-push');
-        toast.success('M-Pesa payment request sent! Check your phone.', {
-          duration: 5000,
-        });
-      } else {
-        throw new Error(data.error || 'Failed to initiate M-Pesa payment');
-      }
-    } catch (error) {
-      console.error('STK Push error:', error);
-      toast.dismiss('stk-push');
-      toast.error(error instanceof Error ? error.message : 'Failed to initiate payment. Please try again.');
-    } finally {
+      if (error) throw new Error(error.message);
+      if (!data?.success) throw new Error(data?.error || 'Failed to initialize payment');
+
+      // Open Paystack checkout in a new window
+      const paystackWindow = window.open(data.authorization_url, '_blank', 'width=600,height=700');
+
+      toast.info('Complete payment in the Paystack window, then click "I Have Paid" below.', { duration: 10000 });
+
+      // Store reference for verification
+      setIsProcessing(false);
+      
+      // Listen for window close or user confirmation
+      const checkInterval = setInterval(() => {
+        if (paystackWindow?.closed) {
+          clearInterval(checkInterval);
+        }
+      }, 1000);
+
+      // We'll let the user confirm manually via button
+      (window as any).__paystack_ref = data.reference;
+
+    } catch (err) {
+      toast.dismiss('paystack-init');
+      console.error('Paystack error:', err);
+      toast.error(err instanceof Error ? err.message : 'Payment initialization failed');
       setIsProcessing(false);
     }
   };
 
-  const handlePinConfirmation = () => {
-    setPinEntered(true);
-    setShowPinPrompt(false);
-
-    let countdown = 5;
-    toast.info(`Verifying payment... ${countdown}s`, { id: 'payment-verification' });
-
-    const verificationInterval = setInterval(() => {
-      countdown--;
-      if (countdown > 0) {
-        toast.info(`Verifying payment... ${countdown}s`, { id: 'payment-verification' });
-      }
-    }, 1000);
-
-    setTimeout(() => {
-      clearInterval(verificationInterval);
-      toast.dismiss('payment-verification');
-      onPaymentConfirmed(transactionId);
-      toast.success('Payment verified! ✅ Order is being submitted...', { duration: 3000 });
-    }, 5000);
+  const handlePaymentConfirmation = () => {
+    const ref = (window as any).__paystack_ref;
+    if (ref) {
+      onPaymentConfirmed(ref);
+      delete (window as any).__paystack_ref;
+      toast.success('Payment confirmed! ✅ Order is being submitted...', { duration: 3000 });
+    } else {
+      toast.error('Please initiate payment first');
+    }
   };
 
   if (isConfirmed) {
@@ -146,142 +117,94 @@ const PaymentSection = ({ totalAmount, onPaymentConfirmed, isConfirmed, phoneNum
     );
   }
 
+  const hasRef = !!(window as any).__paystack_ref;
+
   return (
-    <>
-      {/* M-Pesa PIN Entry Prompt Dialog */}
-      <Dialog open={showPinPrompt} onOpenChange={setShowPinPrompt}>
-        <DialogContent className="sm:max-w-md p-0 overflow-hidden">
-          <div className="bg-gradient-to-b from-green-600 to-green-700 text-white p-6">
-            <DialogHeader className="text-center space-y-4">
-              <div className="mx-auto w-20 h-20 bg-white rounded-full flex items-center justify-center">
-                <span className="text-4xl">📱</span>
-              </div>
-              <DialogTitle className="text-white text-xl font-bold">M-Pesa Payment</DialogTitle>
-            </DialogHeader>
+    <Card className="border-primary/20 bg-gradient-to-br from-background to-green-50 dark:to-green-950/20">
+      <CardHeader className="pb-4">
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <CreditCard className="h-5 w-5 text-green-600" />
+          Pay via Paystack
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Payment Amount */}
+        <div className="bg-gradient-to-r from-green-600 to-green-700 text-white p-4 rounded-xl text-center">
+          <p className="text-sm opacity-90">Amount to Pay</p>
+          <p className="text-3xl font-bold">{formatPrice(totalAmount)}</p>
+        </div>
 
-            <div className="mt-6 space-y-4 text-center">
-              <div className="bg-white/20 rounded-xl p-4">
-                <p className="text-sm opacity-80">Pay EXACT Amount</p>
-                <p className="text-4xl font-bold mt-1">{formatPrice(totalAmount)}</p>
-              </div>
+        {/* Email Input */}
+        <div className="space-y-2">
+          <Label htmlFor="email">Email Address</Label>
+          <Input
+            id="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="e.g., you@example.com"
+            className="text-base"
+            type="email"
+          />
+          <p className="text-xs text-muted-foreground">
+            Paystack will send a receipt to this email
+          </p>
+        </div>
 
-              <div className="bg-white/20 rounded-lg p-4 text-left space-y-2">
-                <p className="font-medium text-center">📱 Check Your Phone</p>
-                <p className="text-sm opacity-90">
-                  An M-Pesa payment prompt has been sent to your phone.
-                  Enter your M-Pesa PIN to authorize the payment.
-                </p>
-              </div>
+        {/* How it works */}
+        <div className="text-sm space-y-2 bg-muted/50 p-3 rounded-lg">
+          <p className="font-medium flex items-center gap-2">
+            <CreditCard className="h-4 w-4" />
+            How it works:
+          </p>
+          <ol className="list-decimal list-inside space-y-1 text-muted-foreground text-xs">
+            <li>Enter your email and click "Pay Now"</li>
+            <li>Complete payment in the Paystack window (card, M-Pesa, etc.)</li>
+            <li>Click "I Have Paid" to confirm</li>
+          </ol>
+        </div>
 
-              <div className="bg-yellow-500/30 border border-yellow-300/50 rounded-lg p-3 text-sm">
-                <p className="font-medium">⚠️ Do NOT share your M-Pesa PIN!</p>
-                <p className="text-xs opacity-80 mt-1">Safaricom will never ask for your PIN via call or SMS</p>
-              </div>
-            </div>
-          </div>
+        {/* Notice */}
+        <div className="bg-amber-100 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-700 rounded-lg p-3">
+          <p className="text-xs text-amber-800 dark:text-amber-300 font-medium text-center flex items-center justify-center gap-2">
+            <AlertCircle className="h-4 w-4" />
+            Amount: <strong>{formatPrice(totalAmount)}</strong> — Paystack supports cards, M-Pesa & more
+          </p>
+        </div>
 
-          <div className="p-4 space-y-4">
-            <p className="text-sm text-muted-foreground text-center">
-              After entering your M-Pesa PIN on your phone, click confirm below
-            </p>
-            <Button
-              className="w-full h-12 bg-green-600 hover:bg-green-700"
-              onClick={handlePinConfirmation}
-            >
-              <CheckCircle2 className="h-5 w-5 mr-2" />
-              I Have Entered My PIN
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Card className="border-primary/20 bg-gradient-to-br from-background to-green-50 dark:to-green-950/20">
-        <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <CreditCard className="h-5 w-5 text-green-600" />
-            Pay via M-Pesa
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Payment Details */}
-          <div className="bg-gradient-to-r from-green-600 to-green-700 text-white p-4 rounded-xl space-y-3">
-            <div className="text-center">
-              <p className="text-sm opacity-90">Amount to Pay</p>
-              <p className="text-3xl font-bold">{formatPrice(totalAmount)}</p>
-            </div>
-
-            <div className="bg-white/20 rounded-lg p-3 space-y-2">
-              <p className="text-sm font-medium text-center">Lipa Na M-Pesa (Paybill)</p>
-              <p className="text-xs text-center opacity-80">
-                Payment will be sent via STK Push — you'll receive a prompt on your phone
-              </p>
-            </div>
-          </div>
-
-          {/* Phone Number Input */}
-          <div className="space-y-2">
-            <Label htmlFor="phone-number">Safaricom Phone Number</Label>
-            <Input
-              id="phone-number"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              placeholder="e.g., 0712345678"
-              className="text-base font-mono tracking-wider"
-              maxLength={13}
-              type="tel"
-            />
-            <p className="text-xs text-muted-foreground">
-              Enter the phone number registered with M-Pesa
-            </p>
-          </div>
-
-          {/* How it works */}
-          <div className="text-sm space-y-2 bg-muted/50 p-3 rounded-lg">
-            <p className="font-medium flex items-center gap-2">
-              <Smartphone className="h-4 w-4" />
-              How it works:
-            </p>
-            <ol className="list-decimal list-inside space-y-1 text-muted-foreground text-xs">
-              <li>Click "Pay Now" button below</li>
-              <li>You'll receive an M-Pesa prompt on your phone</li>
-              <li>Enter your M-Pesa PIN to authorize</li>
-              <li>Payment is automatically confirmed</li>
-            </ol>
-          </div>
-
-          {/* Strict Payment Notice */}
-          <div className="bg-amber-100 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-700 rounded-lg p-3">
-            <p className="text-xs text-amber-800 dark:text-amber-300 font-medium text-center flex items-center justify-center gap-2">
-              <AlertCircle className="h-4 w-4" />
-              Pay the <strong>EXACT amount ({formatPrice(totalAmount)})</strong>
-            </p>
-          </div>
-
-          {/* Pay Button */}
+        {/* Pay Button */}
+        {!hasRef ? (
           <Button
             className="w-full h-14 text-lg bg-green-600 hover:bg-green-700"
-            onClick={initiateSTKPush}
-            disabled={isProcessing || !phoneNumber.trim()}
+            onClick={handlePaystackPayment}
+            disabled={isProcessing || !email.trim()}
           >
             {isProcessing ? (
               <>
                 <Loader2 className="h-6 w-6 animate-spin mr-2" />
-                Sending M-Pesa Request...
+                Initializing...
               </>
             ) : (
               <>
-                <Smartphone className="h-6 w-6 mr-2" />
+                <CreditCard className="h-6 w-6 mr-2" />
                 Pay {formatPrice(totalAmount)} Now
               </>
             )}
           </Button>
+        ) : (
+          <Button
+            className="w-full h-14 text-lg bg-green-600 hover:bg-green-700"
+            onClick={handlePaymentConfirmation}
+          >
+            <CheckCircle2 className="h-6 w-6 mr-2" />
+            I Have Paid
+          </Button>
+        )}
 
-          <p className="text-xs text-center text-muted-foreground">
-            Secure payment via Safaricom M-Pesa
-          </p>
-        </CardContent>
-      </Card>
-    </>
+        <p className="text-xs text-center text-muted-foreground">
+          Secure payment via Paystack 🔒
+        </p>
+      </CardContent>
+    </Card>
   );
 };
 
