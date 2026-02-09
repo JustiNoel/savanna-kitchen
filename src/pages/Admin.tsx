@@ -1743,10 +1743,13 @@ const Admin = () => {
                           </div>
                         </div>
                         <div className="bg-muted/50 rounded-lg p-3">
-                          <p className="text-sm font-medium mb-2">Items:</p>
-                          <ul className="text-sm text-muted-foreground">
+                          <p className="text-sm font-medium mb-2">📦 Items Ordered:</p>
+                          <ul className="text-sm text-muted-foreground space-y-1">
                             {order.order_items?.map((item: any) => (
-                              <li key={item.id}>• {item.quantity}x {item.item_name}</li>
+                              <li key={item.id} className="flex justify-between">
+                                <span>• {item.quantity}x {item.item_name}</span>
+                                <span className="text-primary font-medium">KSh {(item.unit_price * item.quantity).toLocaleString()}</span>
+                              </li>
                             ))}
                           </ul>
                         </div>
