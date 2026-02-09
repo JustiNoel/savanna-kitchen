@@ -3,5 +3,5 @@ project_id = "afcrvtsgydhczfjtxbop"
 [functions.send-notification]
 verify_jwt = false
 
-[functions.mpesa-stk-push]
+[functions.paystack-initialize]
 verify_jwt = false
