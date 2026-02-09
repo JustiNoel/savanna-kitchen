@@ -81,8 +81,10 @@ const CartSheet = () => {
     if (!user || !deliveryLocation) return;
 
     setIsProcessing(true);
+    
+    // Step 1: Create the order
+    let orderId: string | null = null;
     try {
-      // Create the order with payment info
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({
@@ -102,10 +104,20 @@ const CartSheet = () => {
         .single();
       
       if (orderError) throw orderError;
-      
-      // Create order items
+      orderId = order.id;
+    } catch (error) {
+      console.error('Order creation error:', error);
+      toast.error('Failed to place order. Please try again.');
+      setPaymentConfirmed(false);
+      setIsProcessing(false);
+      return;
+    }
+
+    // Step 2: Order created successfully — everything below is non-blocking
+    // Create order items (best effort)
+    try {
       const orderItems = items.map(item => ({
-        order_id: order.id,
+        order_id: orderId!,
         menu_item_id: item.id,
         item_name: item.name,
         quantity: item.quantity,
@@ -117,69 +129,69 @@ const CartSheet = () => {
         .from('order_items')
         .insert(orderItems);
       
-      if (itemsError) throw itemsError;
-      
-      // Record payment in financial_transactions (non-blocking, may fail due to RLS for non-admin users)
-      // The webhook also records this server-side as a fallback
+      if (itemsError) console.error('Order items error (non-blocking):', itemsError);
+    } catch (error) {
+      console.error('Order items error:', error);
+    }
+    
+    // Record payment in financial_transactions (non-blocking, webhook handles this too)
+    try {
+      await supabase.from('financial_transactions').insert({
+        order_id: orderId,
+        type: 'income',
+        category: 'order_payment',
+        amount: totalWithFee,
+        description: `Order #${orderId!.slice(0, 8)} - Paystack Payment`,
+        payment_method: 'paystack',
+        reference_number: code,
+        created_by: user.id,
+      });
+    } catch (finError) {
+      console.log('Financial transaction will be recorded server-side');
+    }
+    
+    // Award loyalty points (non-blocking)
+    const pointsEarned = Math.floor(totalPrice / 10);
+    if (pointsEarned > 0) {
       try {
-        await supabase.from('financial_transactions').insert({
-          order_id: order.id,
-          type: 'income',
-          category: 'order_payment',
-          amount: totalWithFee,
-          description: `Order #${order.id.slice(0, 8)} - Paystack Payment`,
-          payment_method: 'paystack',
-          reference_number: code,
-          created_by: user.id,
+        await addPoints.mutateAsync({
+          points: pointsEarned,
+          source: 'order',
+          referenceId: orderId!,
+          description: `Earned ${pointsEarned} points from order`,
         });
-      } catch (finError) {
-        console.log('Financial transaction will be recorded server-side');
+      } catch (pointsError) {
+        console.error('Failed to add loyalty points:', pointsError);
       }
-      
-      // Award loyalty points (1 point per KSh 10 spent)
-      const pointsEarned = Math.floor(totalPrice / 10);
-      if (pointsEarned > 0) {
-        try {
-          await addPoints.mutateAsync({
-            points: pointsEarned,
-            source: 'order',
-            referenceId: order.id,
-            description: `Earned ${pointsEarned} points from order`,
-          });
-        } catch (pointsError) {
-          console.error('Failed to add loyalty points:', pointsError);
-        }
-      }
-      
-      // Send email notification
+    }
+    
+    // Send email notification (non-blocking)
+    try {
       await sendOrderNotification(
-        order.id,
+        orderId!,
         user.email || '',
         user.user_metadata?.full_name || user.email?.split('@')[0] || 'Customer'
       );
-      
-      setOrderPlaced(true);
-      toast.success('Order placed successfully! 🎉', {
-        description: `Your order is being prepared. You earned ${pointsEarned} loyalty points!`,
-        duration: 5000,
-      });
-      
-      // Clear cart after a short delay to show success state
-      setTimeout(() => {
-        clearCart();
-        setDeliveryLocation(null);
-        setPaymentConfirmed(false);
-        setTransactionCode('');
-        setOrderPlaced(false);
-      }, 3000);
-      
-    } catch (error) {
-      console.error('Order error:', error);
-      toast.error('Failed to place order. Please try again.');
-      setPaymentConfirmed(false);
-    } finally {
-      setIsProcessing(false);
+    } catch (notifError) {
+      console.error('Notification error:', notifError);
     }
+    
+    // SUCCESS — show green tick
+    setOrderPlaced(true);
+    setIsProcessing(false);
+    toast.success('Order placed successfully! 🎉', {
+      description: `Your order is being prepared.${pointsEarned > 0 ? ` You earned ${pointsEarned} loyalty points!` : ''}`,
+      duration: 5000,
+    });
+    
+    // Clear cart after showing success
+    setTimeout(() => {
+      clearCart();
+      setDeliveryLocation(null);
+      setPaymentConfirmed(false);
+      setTransactionCode('');
+      setOrderPlaced(false);
+    }, 3000);
   };
 
   if (items.length === 0) {
