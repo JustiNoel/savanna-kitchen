@@ -119,17 +119,22 @@ const CartSheet = () => {
       
       if (itemsError) throw itemsError;
       
-      // Record payment in financial_transactions
-      await supabase.from('financial_transactions').insert({
-        order_id: order.id,
-        type: 'income',
-        category: 'order_payment',
-        amount: totalWithFee,
-        description: `Order #${order.id.slice(0, 8)} - Paystack Payment`,
-        payment_method: 'paystack',
-        reference_number: code,
-        created_by: user.id,
-      });
+      // Record payment in financial_transactions (non-blocking, may fail due to RLS for non-admin users)
+      // The webhook also records this server-side as a fallback
+      try {
+        await supabase.from('financial_transactions').insert({
+          order_id: order.id,
+          type: 'income',
+          category: 'order_payment',
+          amount: totalWithFee,
+          description: `Order #${order.id.slice(0, 8)} - Paystack Payment`,
+          payment_method: 'paystack',
+          reference_number: code,
+          created_by: user.id,
+        });
+      } catch (finError) {
+        console.log('Financial transaction will be recorded server-side');
+      }
       
       // Award loyalty points (1 point per KSh 10 spent)
       const pointsEarned = Math.floor(totalPrice / 10);

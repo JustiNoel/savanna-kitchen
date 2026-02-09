@@ -84,6 +84,26 @@ serve(async (req) => {
             console.log(`Order ${order.id} marked as paid via webhook`);
           }
         }
+
+        // Record financial transaction server-side (bypasses RLS)
+        const amountInKES = txn.amount / 100; // Paystack sends amount in kobo/cents
+        const { error: finError } = await supabase
+          .from("financial_transactions")
+          .insert({
+            order_id: order.id,
+            type: "income",
+            category: "order_payment",
+            amount: amountInKES,
+            description: `Order #${order.id.slice(0, 8)} - Paystack Payment`,
+            payment_method: "paystack",
+            reference_number: reference,
+          });
+
+        if (finError) {
+          console.error("Error recording financial transaction:", finError);
+        } else {
+          console.log(`Financial transaction recorded for order ${order.id}`);
+        }
       } else {
         console.log(`No order found for reference: ${reference}`);
       }
