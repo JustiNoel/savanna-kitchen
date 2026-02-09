@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle2, CreditCard, Loader2, AlertCircle } from 'lucide-react';
+import { CheckCircle2, CreditCard, Loader2, AlertCircle, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -18,8 +18,74 @@ interface PaymentSectionProps {
 const PaymentSection = ({ totalAmount, onPaymentConfirmed, isConfirmed, phoneNumber }: PaymentSectionProps) => {
   const [email, setEmail] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [paymentReference, setPaymentReference] = useState<string | null>(null);
+  const verifyIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const paystackWindowRef = useRef<Window | null>(null);
 
   const formatPrice = (price: number) => `KSh ${price.toLocaleString()}`;
+
+  const verifyPayment = useCallback(async (reference: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('paystack-verify', {
+        body: { reference },
+      });
+
+      if (error) throw error;
+
+      if (data?.success && data?.verified) {
+        // Payment verified successfully!
+        setIsVerifying(false);
+        if (verifyIntervalRef.current) {
+          clearInterval(verifyIntervalRef.current);
+          verifyIntervalRef.current = null;
+        }
+        toast.success('Payment verified successfully! ✅', { duration: 3000 });
+        onPaymentConfirmed(reference);
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error('Verification error:', err);
+      return false;
+    }
+  }, [onPaymentConfirmed]);
+
+  // Start polling for payment verification
+  const startVerification = useCallback((reference: string) => {
+    setIsVerifying(true);
+    setPaymentReference(reference);
+
+    // Poll every 3 seconds
+    let attempts = 0;
+    const maxAttempts = 60; // 3 minutes max
+
+    verifyIntervalRef.current = setInterval(async () => {
+      attempts++;
+      
+      const verified = await verifyPayment(reference);
+      
+      if (verified || attempts >= maxAttempts) {
+        if (verifyIntervalRef.current) {
+          clearInterval(verifyIntervalRef.current);
+          verifyIntervalRef.current = null;
+        }
+        if (!verified && attempts >= maxAttempts) {
+          setIsVerifying(false);
+          toast.error('Payment verification timed out. Use "Verify Payment" button if you completed payment.');
+        }
+      }
+    }, 3000);
+  }, [verifyPayment]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (verifyIntervalRef.current) {
+        clearInterval(verifyIntervalRef.current);
+      }
+    };
+  }, []);
 
   const handlePaystackPayment = async () => {
     if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -47,23 +113,15 @@ const PaymentSection = ({ totalAmount, onPaymentConfirmed, isConfirmed, phoneNum
       if (error) throw new Error(error.message);
       if (!data?.success) throw new Error(data?.error || 'Failed to initialize payment');
 
-      // Open Paystack checkout in a new window
-      const paystackWindow = window.open(data.authorization_url, '_blank', 'width=600,height=700');
-
-      toast.info('Complete payment in the Paystack window, then click "I Have Paid" below.', { duration: 10000 });
-
-      // Store reference for verification
-      setIsProcessing(false);
+      // Open Paystack checkout
+      paystackWindowRef.current = window.open(data.authorization_url, '_blank', 'width=600,height=700');
       
-      // Listen for window close or user confirmation
-      const checkInterval = setInterval(() => {
-        if (paystackWindow?.closed) {
-          clearInterval(checkInterval);
-        }
-      }, 1000);
+      setIsProcessing(false);
 
-      // We'll let the user confirm manually via button
-      (window as any).__paystack_ref = data.reference;
+      // Start auto-verification polling
+      startVerification(data.reference);
+
+      toast.info('Complete payment in the Paystack window. We\'ll verify automatically!', { duration: 8000 });
 
     } catch (err) {
       toast.dismiss('paystack-init');
@@ -73,14 +131,16 @@ const PaymentSection = ({ totalAmount, onPaymentConfirmed, isConfirmed, phoneNum
     }
   };
 
-  const handlePaymentConfirmation = () => {
-    const ref = (window as any).__paystack_ref;
-    if (ref) {
-      onPaymentConfirmed(ref);
-      delete (window as any).__paystack_ref;
-      toast.success('Payment confirmed! ✅ Order is being submitted...', { duration: 3000 });
-    } else {
-      toast.error('Please initiate payment first');
+  const handleManualVerify = async () => {
+    if (!paymentReference) {
+      toast.error('No payment to verify. Please initiate payment first.');
+      return;
+    }
+    setIsVerifying(true);
+    const verified = await verifyPayment(paymentReference);
+    if (!verified) {
+      setIsVerifying(false);
+      toast.error('Payment not yet confirmed. Please complete payment in the Paystack window.');
     }
   };
 
@@ -101,14 +161,15 @@ const PaymentSection = ({ totalAmount, onPaymentConfirmed, isConfirmed, phoneNum
               <CheckCircle2 className="h-16 w-16 text-green-500" />
             </motion.div>
             <h3 className="font-display text-xl font-bold text-green-700 dark:text-green-300">
-              Payment Received! ✅
+              Payment Verified! ✅
             </h3>
             <p className="text-sm text-green-600 dark:text-green-400 text-center">
-              Your order is being prepared for delivery
+              Your payment has been confirmed. Order is being submitted!
             </p>
-            <div className="bg-green-200 dark:bg-green-800/50 rounded-lg p-3 mt-2">
-              <p className="text-xs text-green-700 dark:text-green-300 text-center font-medium">
-                ⏱️ Estimated delivery: ~5 minutes
+            <div className="bg-green-200 dark:bg-green-800/50 rounded-lg p-3 mt-2 flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-green-700 dark:text-green-300" />
+              <p className="text-xs text-green-700 dark:text-green-300 font-medium">
+                Server-verified secure payment
               </p>
             </div>
           </motion.div>
@@ -116,8 +177,6 @@ const PaymentSection = ({ totalAmount, onPaymentConfirmed, isConfirmed, phoneNum
       </Card>
     );
   }
-
-  const hasRef = !!(window as any).__paystack_ref;
 
   return (
     <Card className="border-primary/20 bg-gradient-to-br from-background to-green-50 dark:to-green-950/20">
@@ -144,6 +203,7 @@ const PaymentSection = ({ totalAmount, onPaymentConfirmed, isConfirmed, phoneNum
             placeholder="e.g., you@example.com"
             className="text-base"
             type="email"
+            disabled={isVerifying}
           />
           <p className="text-xs text-muted-foreground">
             Paystack will send a receipt to this email
@@ -159,9 +219,30 @@ const PaymentSection = ({ totalAmount, onPaymentConfirmed, isConfirmed, phoneNum
           <ol className="list-decimal list-inside space-y-1 text-muted-foreground text-xs">
             <li>Enter your email and click "Pay Now"</li>
             <li>Complete payment in the Paystack window (card, M-Pesa, etc.)</li>
-            <li>Click "I Have Paid" to confirm</li>
+            <li>Payment is automatically verified — no extra steps!</li>
           </ol>
         </div>
+
+        {/* Verifying State */}
+        {isVerifying && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-lg p-4"
+          >
+            <div className="flex items-center gap-3">
+              <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+              <div>
+                <p className="text-sm font-medium text-blue-800 dark:text-blue-300">
+                  Waiting for payment confirmation...
+                </p>
+                <p className="text-xs text-blue-600 dark:text-blue-400">
+                  Complete payment in the Paystack window. We'll detect it automatically.
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         {/* Notice */}
         <div className="bg-amber-100 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-700 rounded-lg p-3">
@@ -171,8 +252,8 @@ const PaymentSection = ({ totalAmount, onPaymentConfirmed, isConfirmed, phoneNum
           </p>
         </div>
 
-        {/* Pay Button */}
-        {!hasRef ? (
+        {/* Pay / Verify Buttons */}
+        {!isVerifying && !paymentReference ? (
           <Button
             className="w-full h-14 text-lg bg-green-600 hover:bg-green-700"
             onClick={handlePaystackPayment}
@@ -190,18 +271,24 @@ const PaymentSection = ({ totalAmount, onPaymentConfirmed, isConfirmed, phoneNum
               </>
             )}
           </Button>
-        ) : (
-          <Button
-            className="w-full h-14 text-lg bg-green-600 hover:bg-green-700"
-            onClick={handlePaymentConfirmation}
-          >
-            <CheckCircle2 className="h-6 w-6 mr-2" />
-            I Have Paid
-          </Button>
-        )}
+        ) : !isVerifying && paymentReference ? (
+          <div className="space-y-2">
+            <Button
+              className="w-full h-14 text-lg bg-green-600 hover:bg-green-700"
+              onClick={handleManualVerify}
+            >
+              <ShieldCheck className="h-6 w-6 mr-2" />
+              Verify Payment
+            </Button>
+            <p className="text-xs text-center text-muted-foreground">
+              Click to check if your payment went through
+            </p>
+          </div>
+        ) : null}
 
-        <p className="text-xs text-center text-muted-foreground">
-          Secure payment via Paystack 🔒
+        <p className="text-xs text-center text-muted-foreground flex items-center justify-center gap-1">
+          <ShieldCheck className="h-3 w-3" />
+          Secure payment with server-side verification 🔒
         </p>
       </CardContent>
     </Card>
