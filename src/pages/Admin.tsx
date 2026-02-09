@@ -1731,8 +1731,9 @@ const Admin = () => {
               <div className="grid gap-4">
                 {orders?.map((order: any) => {
                   // Extract transaction code from notes
+                  const paystackMatch = order.notes?.match(/Paystack:\s*([A-Za-z0-9_-]+)/i);
                   const mpesaMatch = order.notes?.match(/M-Pesa:\s*([A-Z0-9]+)/i);
-                  const transactionCode = mpesaMatch ? mpesaMatch[1] : null;
+                  const transactionCode = paystackMatch ? paystackMatch[1] : (mpesaMatch ? mpesaMatch[1] : null);
                   const phoneMatch = order.notes?.match(/Phone:\s*(\+?\d+)/);
                   const customerPhone = phoneMatch ? phoneMatch[1] : order.profiles?.phone;
                   
