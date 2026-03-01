@@ -2035,7 +2035,7 @@ const Admin = () => {
               </Card>
             </div>
             <Card>
-              <CardHeader><CardTitle>Member Points</CardTitle></CardHeader>
+              <CardHeader><CardTitle>🏆 Loyalty Leaderboard (Most → Least Active)</CardTitle></CardHeader>
               <CardContent>
                 {loyaltyLoading ? (
                   <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
@@ -2045,23 +2045,37 @@ const Admin = () => {
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead className="w-12">Rank</TableHead>
                         <TableHead>Customer</TableHead>
                         <TableHead>Email</TableHead>
                         <TableHead className="text-right">Points</TableHead>
                         <TableHead className="text-right">Earned</TableHead>
                         <TableHead className="text-right">Redeemed</TableHead>
+                        <TableHead className="text-center">Tier</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {loyaltyData?.map((loyalty: any) => (
-                        <TableRow key={loyalty.id}>
-                          <TableCell className="font-medium">{loyalty.profiles?.full_name || 'Unknown'}</TableCell>
-                          <TableCell>{loyalty.profiles?.email || '-'}</TableCell>
-                          <TableCell className="text-right"><Badge variant="outline">{loyalty.points.toLocaleString()}</Badge></TableCell>
-                          <TableCell className="text-right text-green-600">+{loyalty.total_earned.toLocaleString()}</TableCell>
-                          <TableCell className="text-right text-orange-600">-{loyalty.total_redeemed.toLocaleString()}</TableCell>
-                        </TableRow>
-                      ))}
+                      {loyaltyData
+                        ?.sort((a: any, b: any) => (b.points || 0) - (a.points || 0))
+                        .map((loyalty: any, index: number) => {
+                        const rankEmoji = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`;
+                        const tier = loyalty.points >= 1000 ? { label: 'Diamond', color: 'bg-blue-500' }
+                          : loyalty.points >= 500 ? { label: 'Gold', color: 'bg-yellow-500' }
+                          : loyalty.points >= 250 ? { label: 'Silver', color: 'bg-gray-400' }
+                          : loyalty.points >= 100 ? { label: 'Bronze', color: 'bg-orange-600' }
+                          : { label: 'Starter', color: 'bg-muted' };
+                        return (
+                          <TableRow key={loyalty.id} className={index < 3 ? 'bg-primary/5' : ''}>
+                            <TableCell className="text-center text-lg">{rankEmoji}</TableCell>
+                            <TableCell className="font-medium">{loyalty.profiles?.full_name || 'Unknown'}</TableCell>
+                            <TableCell className="text-muted-foreground">{loyalty.profiles?.email || '-'}</TableCell>
+                            <TableCell className="text-right"><Badge variant="outline" className="font-bold">{loyalty.points.toLocaleString()}</Badge></TableCell>
+                            <TableCell className="text-right text-green-600 font-medium">+{loyalty.total_earned.toLocaleString()}</TableCell>
+                            <TableCell className="text-right text-orange-600 font-medium">-{loyalty.total_redeemed.toLocaleString()}</TableCell>
+                            <TableCell className="text-center"><Badge className={`${tier.color} text-white`}>{tier.label}</Badge></TableCell>
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 )}
