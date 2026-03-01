@@ -7,7 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { format } from 'date-fns';
-import { ArrowLeft, Loader2, ShoppingBag, CalendarDays, User } from 'lucide-react';
+import { ArrowLeft, Loader2, ShoppingBag, CalendarDays, User, Award } from 'lucide-react';
+import LoyaltyPoints from '@/components/LoyaltyPoints';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -58,18 +59,22 @@ const Profile = () => {
 
       <main className="container mx-auto px-4 py-8">
         <Tabs defaultValue="orders" className="space-y-6">
-          <TabsList className="grid w-full max-w-md grid-cols-3">
-            <TabsTrigger value="orders" className="flex items-center gap-2">
+          <TabsList className="grid w-full max-w-lg grid-cols-4">
+            <TabsTrigger value="orders" className="flex items-center gap-1 text-xs sm:text-sm">
               <ShoppingBag className="h-4 w-4" />
-              Orders
+              <span className="hidden sm:inline">Orders</span>
             </TabsTrigger>
-            <TabsTrigger value="reservations" className="flex items-center gap-2">
+            <TabsTrigger value="rewards" className="flex items-center gap-1 text-xs sm:text-sm">
+              <Award className="h-4 w-4" />
+              <span className="hidden sm:inline">Rewards</span>
+            </TabsTrigger>
+            <TabsTrigger value="reservations" className="flex items-center gap-1 text-xs sm:text-sm">
               <CalendarDays className="h-4 w-4" />
-              Reservations
+              <span className="hidden sm:inline">Bookings</span>
             </TabsTrigger>
-            <TabsTrigger value="profile" className="flex items-center gap-2">
+            <TabsTrigger value="profile" className="flex items-center gap-1 text-xs sm:text-sm">
               <User className="h-4 w-4" />
-              Profile
+              <span className="hidden sm:inline">Profile</span>
             </TabsTrigger>
           </TabsList>
 
@@ -100,6 +105,9 @@ const Profile = () => {
                           <div className="flex items-center gap-2">
                             <h3 className="font-semibold">Order #{order.id.slice(0, 8)}</h3>
                             <Badge className={getStatusColor(order.status)}>{order.status}</Badge>
+                            {order.payment_status === 'paid' && (
+                              <Badge className="bg-green-500 text-white">✅ Paid</Badge>
+                            )}
                           </div>
                           <p className="text-sm text-muted-foreground">
                             {format(new Date(order.created_at), 'PPp')}
@@ -109,19 +117,30 @@ const Profile = () => {
                           KSh {order.total_amount.toLocaleString()}
                         </p>
                       </div>
-                      <div className="border-t border-border pt-4">
-                        {order.order_items?.map((item) => (
-                          <div key={item.id} className="flex justify-between text-sm py-1">
-                            <span>{item.quantity}x {item.item_name}</span>
-                            <span>KSh {item.subtotal.toLocaleString()}</span>
-                          </div>
-                        ))}
-                      </div>
+                      {order.order_items && order.order_items.length > 0 && (
+                        <div className="border-t border-border pt-3">
+                          {order.order_items.map((item) => (
+                            <div key={item.id} className="flex justify-between text-sm py-1">
+                              <span>{item.quantity}x {item.item_name}</span>
+                              <span className="text-primary font-medium">KSh {item.subtotal.toLocaleString()}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 ))}
               </div>
             )}
+          </TabsContent>
+
+          {/* Rewards Tab */}
+          <TabsContent value="rewards" className="space-y-4">
+            <h2 className="text-2xl font-bold flex items-center gap-2">
+              <Award className="h-6 w-6 text-primary" />
+              My Rewards
+            </h2>
+            <LoyaltyPoints />
           </TabsContent>
 
           {/* Reservations Tab */}
