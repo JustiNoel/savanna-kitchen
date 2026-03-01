@@ -1766,16 +1766,20 @@ const Admin = () => {
                             )}
                           </div>
                         </div>
-                        <div className="bg-muted/50 rounded-lg p-3">
-                          <p className="text-sm font-medium mb-2">📦 Items Ordered:</p>
-                          <ul className="text-sm text-muted-foreground space-y-1">
-                            {order.order_items?.map((item: any) => (
-                              <li key={item.id} className="flex justify-between">
-                                <span>• {item.quantity}x {item.item_name}</span>
-                                <span className="text-primary font-medium">KSh {(item.unit_price * item.quantity).toLocaleString()}</span>
-                              </li>
-                            ))}
-                          </ul>
+                        <div className="bg-muted/50 rounded-lg p-3 border border-primary/10">
+                          <p className="text-sm font-medium mb-2 flex items-center gap-1">📦 Items Ordered ({order.order_items?.length || 0}):</p>
+                          {order.order_items && order.order_items.length > 0 ? (
+                            <ul className="text-sm space-y-1.5">
+                              {order.order_items.map((item: any) => (
+                                <li key={item.id} className="flex justify-between items-center bg-background/60 rounded px-2 py-1">
+                                  <span className="font-medium text-foreground">• {item.quantity}x {item.item_name}</span>
+                                  <span className="text-primary font-bold">KSh {(item.unit_price * item.quantity).toLocaleString()}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className="text-xs text-muted-foreground italic">⚠️ Items not yet loaded — they will appear shortly</p>
+                          )}
                         </div>
                         {order.delivery_address && (
                           <div className="flex items-start gap-2 text-sm">
