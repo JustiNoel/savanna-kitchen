@@ -196,6 +196,16 @@ const Admin = () => {
   const [newRiderPhone, setNewRiderPhone] = useState('');
   const [addRiderDialogOpen, setAddRiderDialogOpen] = useState(false);
 
+  // Promo codes state
+  const [promoDialogOpen, setPromoDialogOpen] = useState(false);
+  const [promoForm, setPromoForm] = useState({
+    code: '', discount_type: 'percentage', discount_value: '', min_order_amount: '', max_uses: '', expires_at: '',
+  });
+  const { data: promoCodes, isLoading: promosLoading } = usePromoCodes();
+  const createPromo = useCreatePromoCode();
+  const togglePromo = useTogglePromoCode();
+  const deletePromo = useDeletePromoCode();
+
   // Fetch all menu items
   const { data: menuItems, isLoading: menuLoading } = useQuery({
     queryKey: ['admin-menu-items'],
