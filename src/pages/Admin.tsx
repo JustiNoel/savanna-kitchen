@@ -2281,6 +2281,137 @@ const Admin = () => {
               }}
             />
           </TabsContent>
+
+          {/* ============ PROMOS TAB ============ */}
+          <TabsContent value="promos" className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold">Promo Codes ({promoCodes?.length || 0})</h2>
+              <Dialog open={promoDialogOpen} onOpenChange={setPromoDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button><Plus className="h-4 w-4 mr-2" />Create Promo</Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Create Promo Code</DialogTitle>
+                    <DialogDescription>Create a discount code for customers.</DialogDescription>
+                  </DialogHeader>
+                  <form onSubmit={(e) => {
+                    e.preventDefault();
+                    createPromo.mutate({
+                      code: promoForm.code,
+                      discount_type: promoForm.discount_type,
+                      discount_value: parseFloat(promoForm.discount_value) || 0,
+                      min_order_amount: parseFloat(promoForm.min_order_amount) || 0,
+                      max_uses: promoForm.max_uses ? parseInt(promoForm.max_uses) : null,
+                      expires_at: promoForm.expires_at || null,
+                      is_active: true,
+                    }, {
+                      onSuccess: () => {
+                        toast.success('Promo code created!');
+                        setPromoDialogOpen(false);
+                        setPromoForm({ code: '', discount_type: 'percentage', discount_value: '', min_order_amount: '', max_uses: '', expires_at: '' });
+                      },
+                      onError: (err: any) => toast.error(err.message || 'Failed to create promo'),
+                    });
+                  }} className="space-y-4 mt-4">
+                    <div className="space-y-2">
+                      <Label>Code</Label>
+                      <Input value={promoForm.code} onChange={(e) => setPromoForm({...promoForm, code: e.target.value.toUpperCase()})} placeholder="e.g. WELCOME20" required />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Type</Label>
+                        <Select value={promoForm.discount_type} onValueChange={(v) => setPromoForm({...promoForm, discount_type: v})}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="percentage">Percentage (%)</SelectItem>
+                            <SelectItem value="fixed">Fixed (KSh)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Value</Label>
+                        <Input type="number" value={promoForm.discount_value} onChange={(e) => setPromoForm({...promoForm, discount_value: e.target.value})} placeholder={promoForm.discount_type === 'percentage' ? '20' : '500'} required />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Min Order (KSh)</Label>
+                        <Input type="number" value={promoForm.min_order_amount} onChange={(e) => setPromoForm({...promoForm, min_order_amount: e.target.value})} placeholder="0" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Max Uses</Label>
+                        <Input type="number" value={promoForm.max_uses} onChange={(e) => setPromoForm({...promoForm, max_uses: e.target.value})} placeholder="Unlimited" />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Expires At</Label>
+                      <Input type="date" value={promoForm.expires_at} onChange={(e) => setPromoForm({...promoForm, expires_at: e.target.value})} />
+                    </div>
+                    <Button type="submit" className="w-full" disabled={createPromo.isPending}>
+                      {createPromo.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Tag className="h-4 w-4 mr-2" />}
+                      Create Promo Code
+                    </Button>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            </div>
+            {promosLoading ? (
+              <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+            ) : promoCodes?.length === 0 ? (
+              <Card><CardContent className="py-12 text-center"><p className="text-muted-foreground">No promo codes yet</p></CardContent></Card>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Code</TableHead>
+                      <TableHead>Discount</TableHead>
+                      <TableHead>Min Order</TableHead>
+                      <TableHead>Usage</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {promoCodes?.map((promo) => (
+                      <TableRow key={promo.id}>
+                        <TableCell className="font-mono font-bold">{promo.code}</TableCell>
+                        <TableCell>
+                          {promo.discount_type === 'percentage' ? `${promo.discount_value}%` : `KSh ${promo.discount_value}`}
+                        </TableCell>
+                        <TableCell>KSh {promo.min_order_amount}</TableCell>
+                        <TableCell>{promo.used_count}{promo.max_uses ? `/${promo.max_uses}` : ''}</TableCell>
+                        <TableCell>
+                          <Switch checked={promo.is_active} onCheckedChange={(v) => togglePromo.mutate({ id: promo.id, is_active: v })} />
+                        </TableCell>
+                        <TableCell>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild><Button variant="destructive" size="icon"><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete promo code?</AlertDialogTitle>
+                                <AlertDialogDescription>This will permanently delete {promo.code}.</AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => deletePromo.mutate(promo.id, { onSuccess: () => toast.success('Promo deleted') })}>Delete</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </TabsContent>
+
+          {/* ============ ANALYTICS TAB ============ */}
+          <TabsContent value="analytics" className="space-y-4">
+            <AnalyticsSection />
+          </TabsContent>
         </Tabs>
       </main>
     </div>
