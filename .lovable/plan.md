@@ -1,75 +1,50 @@
 
+# Fix M-Pesa STK Push -- Switch to Sandbox API
 
-# Plan: Implement All 5 Features
+## Problem
+The edge function is calling the **production** Safaricom API (`api.safaricom.co.ke`), but your Daraja credentials were created for the **sandbox** environment (`sandbox.safaricom.co.ke`). This causes a `400 Bad Request` on authentication every time.
 
-This plan covers: (1) Real-time order status notifications, (2) Promo code/coupon system, (3) Post-delivery order ratings, (4) Automatic inventory deduction, (5) Admin analytics dashboard.
+## Solution
+Update the `mpesa-stk-push` edge function to use the sandbox API endpoints and add an environment toggle so you can easily switch to production later when you go live.
 
----
+## Changes
 
-## 1. Database Changes (Single Migration)
+### 1. Update `supabase/functions/mpesa-stk-push/index.ts`
+- Change the API URLs from production to sandbox:
+  - Auth URL: `https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials`
+  - STK URL: `https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest`
+- Read an optional `MPESA_ENVIRONMENT` secret (defaults to `sandbox`) so you can switch to `production` later by just changing one value
+- Add enhanced error logging that captures the full response body when auth fails, making future debugging easier
+- Update the CallbackURL placeholder to use the project's actual domain
 
-Create the following new tables and functions:
+### 2. Clean up unused secrets
+- Remove the old Equity Bank secrets that are no longer needed: `JENGA_API_KEY`, `JENGA_API_SECRET`, `JENGA_MERCHANT_CODE`, `EQUITY_PAYBILL_NUMBER`, `EQUITY_ACCOUNT_NUMBER`
 
-- **`promo_codes`** table: `id`, `code` (unique), `discount_type` (percentage/fixed), `discount_value`, `min_order_amount`, `max_uses`, `used_count`, `is_active`, `expires_at`, `created_at`
-- **`order_ratings`** table: `id`, `order_id` (unique ref), `user_id`, `food_rating` (1-5), `delivery_rating` (1-5), `comment`, `created_at`
-- **Database function** `deduct_inventory`: Called via trigger or in the CartSheet after order creation to reduce `stock_quantity` on grocery_items, shop_items, spirits_items based on ordered items, and auto-set `is_available = false` when stock reaches 0.
-- Enable realtime on `order_ratings` table.
-- RLS policies:
-  - `promo_codes`: Admins can ALL, anyone can SELECT active codes
-  - `order_ratings`: Users can INSERT/SELECT own, admins can SELECT all
+## How it works after the fix
 
-## 2. Real-Time Order Status Notifications (Enhancement)
+```text
+User clicks "Pay Now"
+       |
+       v
+Edge function reads MPESA_ENVIRONMENT (default: "sandbox")
+       |
+       v
+Calls sandbox.safaricom.co.ke/oauth  (instead of api.safaricom.co.ke)
+       |
+       v
+Gets access token successfully
+       |
+       v
+Sends STK Push to sandbox API
+       |
+       v
+User receives M-Pesa prompt on phone (sandbox simulated)
+```
 
-**Already mostly implemented** in `usePushNotifications.ts`. Enhancement needed:
-- Ensure the hook is used globally in `App.tsx` or `Index.tsx` so notifications fire on every page, not just when the component is mounted.
-- Add a small `NotificationListener` component that mounts the hook at the app level.
+## Going Live Later
+When you're ready for real payments, you just need to:
+1. Complete the "Go Live" process on the Daraja portal
+2. Update your secrets with the production consumer key/secret
+3. Add an `MPESA_ENVIRONMENT` secret with value `production`
 
-## 3. Promo Code / Coupon System
-
-**Files to create/edit:**
-- **`src/hooks/usePromoCodes.ts`**: Hook to validate promo codes and fetch admin list.
-- **`src/components/PromoCodeInput.tsx`**: Input component for checkout (in CartSheet) where users type a code, it validates against the DB, and applies discount to the total.
-- **`src/components/CartSheet.tsx`**: Add PromoCodeInput between location picker and payment. Adjust `totalWithFee` to account for discount. Store discount in order notes.
-- **`src/pages/Admin.tsx`**: Add a "Promos" tab for CRUD on promo codes (create, toggle active, delete).
-
-## 4. Post-Delivery Order Ratings
-
-**Files to create/edit:**
-- **`src/components/OrderRatingDialog.tsx`**: Dialog with star ratings for food quality + delivery experience + optional comment. Shown when an order status changes to "delivered".
-- **`src/pages/Profile.tsx`**: In the Orders tab, add a "Rate Order" button for delivered orders that haven't been rated yet.
-- **`src/pages/Admin.tsx`**: Show average ratings per order in the Orders tab. Add a "Ratings" summary in the analytics section.
-
-## 5. Automatic Inventory Deduction
-
-**Approach:** Server-side via the `paystack-webhook` edge function (most reliable) + client-side fallback in `CartSheet.tsx`.
-
-- **`supabase/functions/paystack-webhook/index.ts`**: After confirming payment, query `order_items` for the order, then for each item, decrement `stock_quantity` on the matching table (using `item_name` to find it across `grocery_items`, `shop_items`, `spirits_items`, `menu_items`). Set `is_available = false` when stock hits 0.
-- **`src/components/CartSheet.tsx`**: As a fallback, after successful order creation, attempt to deduct stock client-side (non-blocking, best-effort).
-
-## 6. Admin Analytics Dashboard
-
-**Files to create:**
-- **`src/components/admin/AnalyticsSection.tsx`**: New component with:
-  - Sales trend chart (daily/weekly/monthly) using `recharts` (already installed)
-  - Top-selling items (aggregate from `order_items`)
-  - Peak order hours (histogram from `orders.created_at`)
-  - Average order value
-  - Revenue vs expenses over time
-- **`src/pages/Admin.tsx`**: Add an "Analytics" tab with `BarChart` icon, rendering `AnalyticsSection`.
-
-## Summary of Files
-
-| Action | File |
-|--------|------|
-| Migration | New tables: `promo_codes`, `order_ratings` + RLS policies |
-| Create | `src/hooks/usePromoCodes.ts` |
-| Create | `src/components/PromoCodeInput.tsx` |
-| Create | `src/components/OrderRatingDialog.tsx` |
-| Create | `src/components/NotificationListener.tsx` |
-| Create | `src/components/admin/AnalyticsSection.tsx` |
-| Edit | `src/components/CartSheet.tsx` — add promo code + inventory deduction |
-| Edit | `src/pages/Admin.tsx` — add Promos tab, Analytics tab, ratings display |
-| Edit | `src/pages/Profile.tsx` — add rate order button for delivered orders |
-| Edit | `src/App.tsx` — mount NotificationListener globally |
-| Edit | `supabase/functions/paystack-webhook/index.ts` — add inventory deduction |
-
+No code changes needed -- it will automatically switch to the production URLs.

@@ -17,6 +17,7 @@ import Grocery from "./pages/Grocery";
 import Shop from "./pages/Shop";
 import Spirits from "./pages/Spirits";
 import NotFound from "./pages/NotFound";
+import NotificationListener from "./components/NotificationListener";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,7 @@ const App = () => (
           <TooltipProvider>
             <Toaster />
             <Sonner />
+            <NotificationListener />
             <BrowserRouter>
               <Routes>
                 <Route path="/" element={<Index />} />

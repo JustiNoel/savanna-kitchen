@@ -86,7 +86,7 @@ serve(async (req) => {
         }
 
         // Record financial transaction server-side (bypasses RLS)
-        const amountInKES = txn.amount / 100; // Paystack sends amount in kobo/cents
+        const amountInKES = txn.amount / 100;
         const { error: finError } = await supabase
           .from("financial_transactions")
           .insert({
@@ -103,6 +103,39 @@ serve(async (req) => {
           console.error("Error recording financial transaction:", finError);
         } else {
           console.log(`Financial transaction recorded for order ${order.id}`);
+        }
+
+        // === AUTOMATIC INVENTORY DEDUCTION ===
+        try {
+          const { data: orderItems, error: itemsError } = await supabase
+            .from("order_items")
+            .select("item_name, quantity")
+            .eq("order_id", order.id);
+
+          if (!itemsError && orderItems) {
+            const inventoryTables = ["menu_items", "grocery_items", "shop_items", "spirits_items"];
+            for (const item of orderItems) {
+              for (const table of inventoryTables) {
+                const { data: found } = await supabase
+                  .from(table)
+                  .select("id, stock_quantity")
+                  .eq("name", item.item_name)
+                  .limit(1);
+
+                if (found && found.length > 0 && found[0].stock_quantity !== null) {
+                  const newQty = Math.max(0, found[0].stock_quantity - item.quantity);
+                  const updateData: Record<string, unknown> = { stock_quantity: newQty };
+                  if (newQty === 0) updateData.is_available = false;
+
+                  await supabase.from(table).update(updateData).eq("id", found[0].id);
+                  console.log(`Deducted ${item.quantity} of "${item.item_name}" from ${table}, new qty: ${newQty}`);
+                  break;
+                }
+              }
+            }
+          }
+        } catch (invError) {
+          console.error("Inventory deduction error:", invError);
         }
       } else {
         console.log(`No order found for reference: ${reference}`);
