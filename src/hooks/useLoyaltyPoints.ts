@@ -41,46 +41,15 @@ export const useAddLoyaltyPoints = () => {
     }) => {
       if (!user) throw new Error('User not authenticated');
 
-      // First, update or create loyalty points
-      const { data: existing } = await supabase
-        .from('loyalty_points')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      const { error } = await supabase.rpc('add_loyalty_points', {
+        p_user_id: user.id,
+        p_points: points,
+        p_source: source,
+        p_reference_id: referenceId || null,
+        p_description: description || null,
+      });
 
-      if (existing) {
-        await supabase
-          .from('loyalty_points')
-          .update({
-            points: existing.points + points,
-            total_earned: existing.total_earned + points,
-          })
-          .eq('user_id', user.id);
-      } else {
-        await supabase
-          .from('loyalty_points')
-          .insert({
-            user_id: user.id,
-            points,
-            total_earned: points,
-            total_redeemed: 0,
-          });
-      }
-
-      // Add transaction record
-      const { error: txError } = await supabase
-        .from('loyalty_transactions')
-        .insert({
-          user_id: user.id,
-          points,
-          type: 'earn',
-          source,
-          reference_id: referenceId,
-          description: description || `Earned ${points} points from ${source}`,
-        });
-
-      if (txError) throw txError;
-
+      if (error) throw error;
       return { points };
     },
     onSuccess: () => {
@@ -103,35 +72,13 @@ export const useRedeemPoints = () => {
     }) => {
       if (!user) throw new Error('User not authenticated');
 
-      const { data: existing } = await supabase
-        .from('loyalty_points')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
+      const { error } = await supabase.rpc('redeem_loyalty_points', {
+        p_user_id: user.id,
+        p_points: points,
+        p_description: `Redeemed ${points} points for ${discount}% discount`,
+      });
 
-      if (!existing || existing.points < points) {
-        throw new Error('Insufficient points');
-      }
-
-      await supabase
-        .from('loyalty_points')
-        .update({
-          points: existing.points - points,
-          total_redeemed: existing.total_redeemed + points,
-        })
-        .eq('user_id', user.id);
-
-      // Add transaction record
-      await supabase
-        .from('loyalty_transactions')
-        .insert({
-          user_id: user.id,
-          points,
-          type: 'redeem',
-          source: 'discount',
-          description: `Redeemed ${points} points for ${discount}% discount`,
-        });
-
+      if (error) throw error;
       return { discount };
     },
     onSuccess: () => {

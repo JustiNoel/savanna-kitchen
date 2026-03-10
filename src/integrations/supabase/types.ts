@@ -804,12 +804,26 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_loyalty_points: {
+        Args: {
+          p_description?: string
+          p_points: number
+          p_reference_id?: string
+          p_source: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      redeem_loyalty_points: {
+        Args: { p_description?: string; p_points: number; p_user_id: string }
+        Returns: undefined
       }
     }
     Enums: {

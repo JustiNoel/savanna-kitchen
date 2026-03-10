@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,16 +13,42 @@ serve(async (req) => {
   }
 
   try {
+    // Authenticate user
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const PAYSTACK_SECRET_KEY = Deno.env.get("PAYSTACK_SECRET_KEY");
     if (!PAYSTACK_SECRET_KEY) {
       throw new Error("PAYSTACK_SECRET_KEY is not configured.");
     }
 
-    const { reference } = await req.json();
+    const body = await req.json();
+    const reference = typeof body.reference === "string" ? body.reference.trim() : "";
 
-    if (!reference) {
+    // Validate reference format
+    if (!reference || !/^[a-zA-Z0-9_-]+$/.test(reference) || reference.length > 100) {
       return new Response(
-        JSON.stringify({ success: false, error: "Transaction reference is required" }),
+        JSON.stringify({ success: false, error: "Valid transaction reference is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -37,7 +64,6 @@ serve(async (req) => {
     });
 
     const data = await response.json();
-    console.log("Paystack verify response:", JSON.stringify(data));
 
     if (data.status && data.data) {
       const txn = data.data;
@@ -48,26 +74,24 @@ serve(async (req) => {
           success: true,
           verified: isSuccess,
           status: txn.status,
-          amount: txn.amount / 100, // Convert back from smallest unit
+          amount: txn.amount / 100,
           currency: txn.currency,
           reference: txn.reference,
           channel: txn.channel,
           paid_at: txn.paid_at,
-          customer_email: txn.customer?.email,
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     } else {
       return new Response(
-        JSON.stringify({ success: false, verified: false, error: data.message || "Verification failed" }),
+        JSON.stringify({ success: false, verified: false, error: "Verification failed" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
   } catch (error) {
     console.error("Paystack verify error:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return new Response(
-      JSON.stringify({ success: false, verified: false, error: errorMessage }),
+      JSON.stringify({ success: false, verified: false, error: "Verification failed" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
