@@ -739,6 +739,68 @@ export type Database = {
         }
         Relationships: []
       }
+      survey_responses: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          order_id: string | null
+          q1_delivery_speed: number
+          q10_additional_feedback: string | null
+          q2_food_taste: number
+          q3_food_presentation: number
+          q4_packaging_quality: number
+          q5_ordering_ease: number
+          q6_customer_service: number
+          q7_overall_rating: number
+          q8_improvements: string | null
+          q9_remove_or_add: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          order_id?: string | null
+          q1_delivery_speed: number
+          q10_additional_feedback?: string | null
+          q2_food_taste: number
+          q3_food_presentation: number
+          q4_packaging_quality: number
+          q5_ordering_ease: number
+          q6_customer_service: number
+          q7_overall_rating: number
+          q8_improvements?: string | null
+          q9_remove_or_add?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          order_id?: string | null
+          q1_delivery_speed?: number
+          q10_additional_feedback?: string | null
+          q2_food_taste?: number
+          q3_food_presentation?: number
+          q4_packaging_quality?: number
+          q5_ordering_ease?: number
+          q6_customer_service?: number
+          q7_overall_rating?: number
+          q8_improvements?: string | null
+          q9_remove_or_add?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "survey_responses_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
