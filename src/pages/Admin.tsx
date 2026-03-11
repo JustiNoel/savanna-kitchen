@@ -2417,6 +2417,11 @@ const Admin = () => {
           <TabsContent value="analytics" className="space-y-4">
             <AnalyticsSection />
           </TabsContent>
+
+          {/* ============ SURVEYS TAB ============ */}
+          <TabsContent value="surveys" className="space-y-4">
+            <SurveysSection />
+          </TabsContent>
         </Tabs>
       </main>
     </div>
