@@ -34,8 +34,8 @@ const LocationPicker = ({ onLocationSelect, initialAddress = '' }: LocationPicke
   const [countdown, setCountdown] = useState(GPS_TIMEOUT_SECONDS);
   const [isManualMode, setIsManualMode] = useState(false);
   
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const countdownRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Cleanup timers on unmount
   useEffect(() => {
