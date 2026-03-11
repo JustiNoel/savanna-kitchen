@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import LocationPicker from './LocationPicker';
 import PaymentSection from './PaymentSection';
 import PromoCodeInput from './PromoCodeInput';
+import PostOrderSurvey from './PostOrderSurvey';
 
 interface DeliveryLocation {
   address: string;
