@@ -28,6 +28,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import FinanceSection from '@/components/admin/FinanceSection';
 import InventoryAlerts from '@/components/InventoryAlerts';
 import AnalyticsSection from '@/components/admin/AnalyticsSection';
+import SurveysSection from '@/components/admin/SurveysSection';
 import { usePromoCodes, useCreatePromoCode, useTogglePromoCode, useDeletePromoCode } from '@/hooks/usePromoCodes';
 
 interface MenuItemForm {
