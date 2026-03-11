@@ -230,11 +230,17 @@ const CartSheet = () => {
     }
 
     setOrderPlaced(true);
+    setCompletedOrderId(orderId);
     setIsProcessing(false);
     toast.success('Order placed successfully! 🎉', {
       description: `Your order is being prepared.${pointsEarned > 0 ? ` You earned ${pointsEarned} loyalty points!` : ''}`,
       duration: 5000,
     });
+
+    // Show survey after a brief delay
+    setTimeout(() => {
+      setSurveyOpen(true);
+    }, 2000);
 
     setTimeout(() => {
       clearCart();
@@ -245,7 +251,7 @@ const CartSheet = () => {
       setPromoDiscount(0);
       setPromoId(null);
       setAppliedPromoCode(null);
-    }, 3000);
+    }, 5000);
   };
 
   if (items.length === 0) {
