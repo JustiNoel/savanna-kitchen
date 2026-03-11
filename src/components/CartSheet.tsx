@@ -35,6 +35,8 @@ const CartSheet = () => {
   const [paymentConfirmed, setPaymentConfirmed] = useState(false);
   const [transactionCode, setTransactionCode] = useState('');
   const [orderPlaced, setOrderPlaced] = useState(false);
+  const [surveyOpen, setSurveyOpen] = useState(false);
+  const [completedOrderId, setCompletedOrderId] = useState<string | null>(null);
 
   // Promo code state
   const [promoDiscount, setPromoDiscount] = useState(0);
