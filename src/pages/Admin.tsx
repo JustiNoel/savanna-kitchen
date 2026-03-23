@@ -192,6 +192,12 @@ const Admin = () => {
   const [newAdminEmail, setNewAdminEmail] = useState('');
   const [addAdminDialogOpen, setAddAdminDialogOpen] = useState(false);
   
+  // Password reset state
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetNewPassword, setResetNewPassword] = useState('');
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
+  const [showResetPassword, setShowResetPassword] = useState(false);
+  
   // Rider management state
   const [newRiderEmail, setNewRiderEmail] = useState('');
   const [newRiderPhone, setNewRiderPhone] = useState('');
