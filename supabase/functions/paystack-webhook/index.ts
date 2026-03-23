@@ -27,26 +27,33 @@ serve(async (req) => {
     const body = await req.text();
     const signature = req.headers.get("x-paystack-signature");
 
-    // Verify webhook signature
-    if (signature) {
-      const encoder = new TextEncoder();
-      const key = await crypto.subtle.importKey(
-        "raw",
-        encoder.encode(PAYSTACK_SECRET_KEY),
-        { name: "HMAC", hash: "SHA-512" },
-        false,
-        ["sign"]
+    // Reject immediately if signature is missing
+    if (!signature) {
+      console.error("Missing webhook signature header");
+      return new Response(
+        JSON.stringify({ error: "Missing signature" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
-      const sig = await crypto.subtle.sign("HMAC", key, encoder.encode(body));
-      const expectedSignature = toHex(sig);
+    }
 
-      if (expectedSignature !== signature) {
-        console.error("Invalid webhook signature");
-        return new Response(
-          JSON.stringify({ error: "Invalid signature" }),
-          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
+    // Verify webhook signature
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      "raw",
+      encoder.encode(PAYSTACK_SECRET_KEY),
+      { name: "HMAC", hash: "SHA-512" },
+      false,
+      ["sign"]
+    );
+    const sig = await crypto.subtle.sign("HMAC", key, encoder.encode(body));
+    const expectedSignature = toHex(sig);
+
+    if (expectedSignature !== signature) {
+      console.error("Invalid webhook signature");
+      return new Response(
+        JSON.stringify({ error: "Invalid signature" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const event = JSON.parse(body);
