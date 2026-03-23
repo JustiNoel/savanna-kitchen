@@ -379,42 +379,32 @@ const Auth = () => {
               Reset Password
             </DialogTitle>
             <DialogDescription>
-              Enter your email address and we'll send you a link to reset your password.
+              To reset your password, please contact the admin via email. They will assist you with the reset.
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleForgotPassword} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="forgot-email">Email</Label>
-              <Input
-                id="forgot-email"
-                type="email"
-                placeholder="your@email.com"
-                value={forgotEmail}
-                onChange={(e) => setForgotEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className="flex gap-3">
-              <Button
-                type="button"
-                variant="outline"
-                className="flex-1"
-                onClick={() => setShowForgotPassword(false)}
+          <div className="space-y-4">
+            <div className="bg-primary/10 p-4 rounded-lg text-center space-y-3">
+              <p className="text-sm font-medium">Contact Admin for Password Reset:</p>
+              <a 
+                href="mailto:justinoel254@gmail.com?subject=Password Reset Request&body=Hello, I would like to reset my password. My account email is: " 
+                className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors"
               >
-                Cancel
-              </Button>
-              <Button type="submit" className="flex-1" disabled={isSendingReset}>
-                {isSendingReset ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Sending...
-                  </>
-                ) : (
-                  'Send Reset Link'
-                )}
-              </Button>
+                <Mail className="h-4 w-4" />
+                justinoel254@gmail.com
+              </a>
+              <p className="text-xs text-muted-foreground">
+                Send an email with your account email address and the admin will reset your password.
+              </p>
             </div>
-          </form>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => setShowForgotPassword(false)}
+            >
+              Close
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
