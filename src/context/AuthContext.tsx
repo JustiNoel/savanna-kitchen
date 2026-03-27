@@ -49,6 +49,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(session?.user ?? null);
         setLoading(false);
         
+        // Log auth events
+        if (session?.user && (event === 'SIGNED_IN')) {
+          logAuditEvent(session.user.id, session.user.email || null, 'login');
+        }
+        if (event === 'SIGNED_OUT') {
+          // user is already null
+        }
+        
         // Check admin role in a deferred manner
         if (session?.user) {
           setTimeout(() => {
