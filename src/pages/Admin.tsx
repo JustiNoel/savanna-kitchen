@@ -2547,6 +2547,13 @@ const Admin = () => {
           <TabsContent value="surveys" className="space-y-4">
             <SurveysSection />
           </TabsContent>
+
+          {/* ============ SECURITY TAB ============ */}
+          {user?.email === 'justinoel254@gmail.com' && (
+            <TabsContent value="security" className="space-y-4">
+              <SecuritySection />
+            </TabsContent>
+          )}
         </Tabs>
       </main>
     </div>
