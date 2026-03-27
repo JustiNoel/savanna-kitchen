@@ -29,7 +29,9 @@ import FinanceSection from '@/components/admin/FinanceSection';
 import InventoryAlerts from '@/components/InventoryAlerts';
 import AnalyticsSection from '@/components/admin/AnalyticsSection';
 import SurveysSection from '@/components/admin/SurveysSection';
+import SecuritySection from '@/components/admin/SecuritySection';
 import { usePromoCodes, useCreatePromoCode, useTogglePromoCode, useDeletePromoCode } from '@/hooks/usePromoCodes';
+import { logAuditEvent } from '@/hooks/useAuditLog';
 
 interface MenuItemForm {
   name: string;
