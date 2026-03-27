@@ -1,15 +1,19 @@
 import { motion } from 'framer-motion';
-import { UtensilsCrossed, ShoppingBasket, Store, Wine, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import kitchenVideo from '@/assets/kitchen-background.mp4';
+import categoryFood from '@/assets/category-food.jpg';
+import categoryGrocery from '@/assets/category-grocery.jpg';
+import categoryShop from '@/assets/category-shop.jpg';
+import categorySpirits from '@/assets/category-spirits.jpg';
 
 interface CategoryCard {
   id: string;
   name: string;
-  icon: React.ReactNode;
+  image: string;
   emoji: string;
   description: string;
   href: string;
@@ -21,7 +25,7 @@ const categories: CategoryCard[] = [
   {
     id: 'food',
     name: 'Food',
-    icon: <UtensilsCrossed className="h-8 w-8" />,
+    image: categoryFood,
     emoji: '🍽️',
     description: 'Delicious meals & Book your table',
     href: '/food',
@@ -31,7 +35,7 @@ const categories: CategoryCard[] = [
   {
     id: 'grocery',
     name: 'Grocery',
-    icon: <ShoppingBasket className="h-8 w-8" />,
+    image: categoryGrocery,
     emoji: '🥕',
     description: 'Fresh vegetables & fruits',
     href: '/grocery',
@@ -41,7 +45,7 @@ const categories: CategoryCard[] = [
   {
     id: 'shop',
     name: 'Shop',
-    icon: <Store className="h-8 w-8" />,
+    image: categoryShop,
     emoji: '🛒',
     description: 'Everyday essentials',
     href: '/shop',
@@ -51,7 +55,7 @@ const categories: CategoryCard[] = [
   {
     id: 'spirits',
     name: 'Spirits',
-    icon: <Wine className="h-8 w-8" />,
+    image: categorySpirits,
     emoji: '🍾',
     description: 'Premium drinks & spirits',
     href: '/spirits',
