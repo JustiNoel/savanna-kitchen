@@ -154,16 +154,27 @@ const Hero = () => {
             >
               <Link to={category.href} className="block h-full">
                 <Card className={`h-full border-2 hover:border-primary/50 transition-all duration-300 hover:shadow-2xl overflow-hidden bg-gradient-to-br ${category.bgGradient} backdrop-blur-sm`}>
-                  <CardContent className="p-4 md:p-6 text-center">
-                    <div className={`inline-flex items-center justify-center w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-background/80 shadow-lg mb-3 ${category.color}`}>
-                      <span className="text-3xl md:text-4xl">{category.emoji}</span>
+                  <CardContent className="p-0 text-center">
+                    <div className="relative w-full h-28 md:h-36 overflow-hidden rounded-t-lg">
+                      <img 
+                        src={category.image} 
+                        alt={category.name} 
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                        width={512}
+                        height={512}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
+                      <span className="absolute bottom-2 left-1/2 -translate-x-1/2 text-2xl drop-shadow-lg">{category.emoji}</span>
                     </div>
-                    <h3 className="font-display text-lg md:text-xl font-bold mb-1 text-foreground">
-                      {category.name}
-                    </h3>
-                    <p className="text-xs md:text-sm text-muted-foreground line-clamp-2">
-                      {category.description}
-                    </p>
+                    <div className="p-3 md:p-4">
+                      <h3 className="font-display text-lg md:text-xl font-bold mb-1 text-foreground">
+                        {category.name}
+                      </h3>
+                      <p className="text-xs md:text-sm text-muted-foreground line-clamp-2">
+                        {category.description}
+                      </p>
+                    </div>
                   </CardContent>
                 </Card>
               </Link>
