@@ -866,7 +866,17 @@ const Admin = () => {
 
   const removeRider = useMutation({
     mutationFn: async ({ riderId, userId }: { riderId: string; userId: string }) => {
-      // Delete rider profile first
+      // First, unassign this rider from any orders to avoid FK constraint
+      const { error: unassignError } = await supabase
+        .from('orders')
+        .update({ rider_id: null })
+        .eq('rider_id', riderId);
+      if (unassignError) {
+        console.error('Unassign rider error:', unassignError);
+        throw new Error('Failed to unassign rider from orders: ' + unassignError.message);
+      }
+
+      // Delete rider profile
       const { error: riderError } = await supabase.from('riders').delete().eq('id', riderId);
       if (riderError) {
         console.error('Rider delete error:', riderError);

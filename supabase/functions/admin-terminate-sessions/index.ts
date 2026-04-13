@@ -23,7 +23,7 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
 
-    // Verify caller is admin
+    // Verify caller
     const callerClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
     });
@@ -35,6 +35,7 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Check admin role
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
     const { data: roleData } = await adminClient
       .from('user_roles')
@@ -50,55 +51,15 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { email, newPassword } = await req.json();
+    // Sign out the user from all sessions, then they re-login on current device
+    const { error } = await adminClient.auth.admin.signOut(caller.id, 'others');
 
-    if (!email || !newPassword) {
-      return new Response(JSON.stringify({ error: 'Email and new password are required' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+    if (error) throw error;
 
-    if (newPassword.length < 6) {
-      return new Response(JSON.stringify({ error: 'Password must be at least 6 characters' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // Find user by email - paginate through all users
-    let targetUser = null;
-    let page = 1;
-    const perPage = 1000;
-
-    while (!targetUser) {
-      const { data: { users }, error: listError } = await adminClient.auth.admin.listUsers({
-        page,
-        perPage,
-      });
-      if (listError) throw listError;
-      if (!users || users.length === 0) break;
-
-      targetUser = users.find(u => u.email?.toLowerCase() === email.toLowerCase());
-      if (users.length < perPage) break;
-      page++;
-    }
-
-    if (!targetUser) {
-      return new Response(JSON.stringify({ error: `User not found with email: ${email}. Please check the email address.` }), {
-        status: 404,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    const { error: updateError } = await adminClient.auth.admin.updateUserById(
-      targetUser.id,
-      { password: newPassword }
-    );
-
-    if (updateError) throw updateError;
-
-    return new Response(JSON.stringify({ success: true, message: `Password reset for ${email}` }), {
+    return new Response(JSON.stringify({ 
+      success: true, 
+      message: 'All other sessions have been terminated. Only this device remains active.' 
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {

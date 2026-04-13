@@ -2,11 +2,13 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Shield, Monitor, AlertTriangle, Users, Globe } from 'lucide-react';
+import { Shield, Monitor, AlertTriangle, Users, Globe, LogOut, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 interface AuditLog {
   id: string;
@@ -20,6 +22,7 @@ interface AuditLog {
 }
 
 const SecuritySection = () => {
+  const [terminatingSession, setTerminatingSession] = useState(false);
   const { data: logs, refetch } = useQuery({
     queryKey: ['audit-logs'],
     queryFn: async () => {
@@ -84,9 +87,30 @@ const SecuritySection = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Shield className="h-6 w-6 text-red-500" />
-        <h2 className="text-2xl font-bold">Security & Audit Dashboard</h2>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Shield className="h-6 w-6 text-red-500" />
+          <h2 className="text-2xl font-bold">Security & Audit Dashboard</h2>
+        </div>
+        <Button
+          variant="destructive"
+          disabled={terminatingSession}
+          onClick={async () => {
+            setTerminatingSession(true);
+            try {
+              const { data, error } = await supabase.functions.invoke('admin-terminate-sessions');
+              if (error) throw error;
+              toast.success(data?.message || 'All other sessions terminated successfully');
+            } catch (err: any) {
+              toast.error(err.message || 'Failed to terminate sessions');
+            } finally {
+              setTerminatingSession(false);
+            }
+          }}
+        >
+          {terminatingSession ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <LogOut className="h-4 w-4 mr-2" />}
+          Terminate Other Sessions
+        </Button>
       </div>
 
       {/* Summary Cards */}
