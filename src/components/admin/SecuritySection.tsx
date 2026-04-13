@@ -87,9 +87,30 @@ const SecuritySection = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Shield className="h-6 w-6 text-red-500" />
-        <h2 className="text-2xl font-bold">Security & Audit Dashboard</h2>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Shield className="h-6 w-6 text-red-500" />
+          <h2 className="text-2xl font-bold">Security & Audit Dashboard</h2>
+        </div>
+        <Button
+          variant="destructive"
+          disabled={terminatingSession}
+          onClick={async () => {
+            setTerminatingSession(true);
+            try {
+              const { data, error } = await supabase.functions.invoke('admin-terminate-sessions');
+              if (error) throw error;
+              toast.success(data?.message || 'All other sessions terminated successfully');
+            } catch (err: any) {
+              toast.error(err.message || 'Failed to terminate sessions');
+            } finally {
+              setTerminatingSession(false);
+            }
+          }}
+        >
+          {terminatingSession ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <LogOut className="h-4 w-4 mr-2" />}
+          Terminate Other Sessions
+        </Button>
       </div>
 
       {/* Summary Cards */}
