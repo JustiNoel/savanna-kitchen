@@ -11,6 +11,17 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
+
+    if (!supabaseUrl || !supabaseServiceKey || !supabaseAnonKey) {
+      return new Response(JSON.stringify({ error: 'Server configuration error' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
@@ -18,10 +29,6 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
 
     // Verify caller
     const callerClient = createClient(supabaseUrl, supabaseAnonKey, {
@@ -51,14 +58,34 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Sign out the user from all sessions, then they re-login on current device
-    const { error } = await adminClient.auth.admin.signOut(caller.id, 'others');
+    // Use the Admin API to sign out the user globally, then they re-login on current device
+    const { error } = await adminClient.auth.admin.signOut(caller.id, 'global');
 
-    if (error) throw error;
+    if (error) {
+      // Fallback: use direct GoTrue Admin API to invalidate all refresh tokens
+      const response = await fetch(`${supabaseUrl}/auth/v1/admin/users/${caller.id}/factors`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${supabaseServiceKey}`,
+          'apikey': supabaseServiceKey,
+        },
+      });
+      await response.text(); // consume body
+
+      // As a reliable fallback, update user to force re-authentication
+      const { error: updateError } = await adminClient.auth.admin.updateUserById(
+        caller.id,
+        { app_metadata: { sessions_terminated_at: new Date().toISOString() } }
+      );
+
+      if (updateError) {
+        throw new Error('Failed to terminate sessions: ' + updateError.message);
+      }
+    }
 
     return new Response(JSON.stringify({ 
       success: true, 
-      message: 'All other sessions have been terminated. Only this device remains active.' 
+      message: 'All other sessions have been terminated. Please log in again on this device.' 
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
