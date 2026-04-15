@@ -11,6 +11,7 @@ import RefreshAlert from '@/components/RefreshAlert';
 import OrderTracker from '@/components/OrderTracker';
 import DeliveryTracker from '@/components/DeliveryTracker';
 import BackButton from '@/components/BackButton';
+import MascotGuide from '@/components/MascotGuide';
 
 const Food = () => {
   return (
@@ -19,6 +20,7 @@ const Food = () => {
       <RefreshAlert />
       <AIHelpChat />
       <FloatingCart />
+      <MascotGuide />
       <main className="pt-20">
         <div className="container mx-auto px-4 py-4">
           <BackButton />
