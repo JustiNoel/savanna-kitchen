@@ -20,6 +20,7 @@ const Food = () => {
       <RefreshAlert />
       <AIHelpChat />
       <FloatingCart />
+      <MascotGuide />
       <main className="pt-20">
         <div className="container mx-auto px-4 py-4">
           <BackButton />
