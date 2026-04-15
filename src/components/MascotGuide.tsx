@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Sparkles, MessageCircle, Send, ChevronRight, Loader2, MapPin } from 'lucide-react';
+import { X, Sparkles, MessageCircle, Send, ChevronRight, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useLocation } from 'react-router-dom';
