@@ -9,6 +9,7 @@ import RefreshAlert from '@/components/RefreshAlert';
 import OrderTracker from '@/components/OrderTracker';
 import DeliveryTracker from '@/components/DeliveryTracker';
 import BackButton from '@/components/BackButton';
+import MascotGuide from '@/components/MascotGuide';
 
 const Shop = () => {
   return (
