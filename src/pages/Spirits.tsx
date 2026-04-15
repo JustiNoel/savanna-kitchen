@@ -23,8 +23,8 @@ const Spirits = () => {
         <div className="container mx-auto px-4 py-4">
           <BackButton />
         </div>
-        <CategoryWeeklySpecials category="spirits" />
-        <SpiritsSection />
+        <div data-tour="weekly-specials"><CategoryWeeklySpecials category="spirits" /></div>
+        <div data-tour="spirits-items"><SpiritsSection /></div>
         <OrderTracker />
         <DeliveryTracker />
         <ReviewsSection />

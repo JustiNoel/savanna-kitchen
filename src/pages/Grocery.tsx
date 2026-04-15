@@ -23,8 +23,8 @@ const Grocery = () => {
         <div className="container mx-auto px-4 py-4">
           <BackButton />
         </div>
-        <CategoryWeeklySpecials category="grocery" />
-        <GrocerySection />
+        <div data-tour="weekly-specials"><CategoryWeeklySpecials category="grocery" /></div>
+        <div data-tour="grocery-items"><GrocerySection /></div>
         <OrderTracker />
         <DeliveryTracker />
         <ReviewsSection />

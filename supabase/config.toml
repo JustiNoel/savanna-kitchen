@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.admin-terminate-sessions]
 verify_jwt = false
+
+[functions.mascot-chat]
+verify_jwt = false

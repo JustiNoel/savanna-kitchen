@@ -25,12 +25,12 @@ const Food = () => {
         <div className="container mx-auto px-4 py-4">
           <BackButton />
         </div>
-        <CategoryWeeklySpecials category="food" />
-        <DailyDishes />
-        <MenuSection />
+        <div data-tour="weekly-specials"><CategoryWeeklySpecials category="food" /></div>
+        <div data-tour="daily-dishes"><DailyDishes /></div>
+        <div data-tour="menu"><MenuSection /></div>
         <OrderTracker />
         <DeliveryTracker />
-        <ReservationForm />
+        <div data-tour="reservation"><ReservationForm /></div>
         <ReviewsSection />
       </main>
       <Footer />

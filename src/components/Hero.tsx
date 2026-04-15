@@ -138,6 +138,7 @@ const Hero = () => {
 
         {/* Category Cards Grid */}
         <motion.div 
+          data-tour="hero-categories"
           className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 max-w-4xl mx-auto mb-8"
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
@@ -203,6 +204,7 @@ const Hero = () => {
 
         {/* Quick Stats */}
         <motion.div 
+          data-tour="hero-stats"
           className="grid grid-cols-3 gap-4 max-w-md mx-auto mt-12 backdrop-blur-sm bg-background/40 rounded-2xl p-4"
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}

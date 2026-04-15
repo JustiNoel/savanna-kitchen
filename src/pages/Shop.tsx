@@ -23,8 +23,8 @@ const Shop = () => {
         <div className="container mx-auto px-4 py-4">
           <BackButton />
         </div>
-        <CategoryWeeklySpecials category="shop" />
-        <ShopSection />
+        <div data-tour="weekly-specials"><CategoryWeeklySpecials category="shop" /></div>
+        <div data-tour="shop-items"><ShopSection /></div>
         <OrderTracker />
         <DeliveryTracker />
         <ReviewsSection />
