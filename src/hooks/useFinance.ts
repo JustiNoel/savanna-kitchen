@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -217,9 +218,9 @@ export const useDeleteExpense = () => {
   });
 };
 
-// Financial summary calculations
+// Financial summary calculations - excludes cancelled orders, counts paid revenue up-to-date
 export const useFinancialSummary = () => {
-  const { data: transactions } = useFinancialTransactions();
+  const queryClient = useQueryClient();
   const { data: invoices } = useInvoices();
   const { data: expenses } = useExpenses();
   const { data: orders } = useQuery({
@@ -232,17 +233,39 @@ export const useFinancialSummary = () => {
       if (error) throw error;
       return data;
     },
+    refetchInterval: 15000, // poll every 15s as a safety net
   });
 
-  const totalRevenue = orders?.reduce((sum, order) => 
-    order.status === 'delivered' ? sum + Number(order.total_amount) : sum, 0) || 0;
-  
+  // Realtime: refresh whenever orders/transactions change
+  useEffect(() => {
+    const channel = supabase
+      .channel('finance-summary-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['orders-summary'] });
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'financial_transactions' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['financial-transactions'] });
+        queryClient.invalidateQueries({ queryKey: ['orders-summary'] });
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'expenses' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['expenses'] });
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'invoices' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [queryClient]);
+
+  // Exclude cancelled orders entirely. Revenue = any PAID order that isn't cancelled.
+  const validOrders = orders?.filter(o => o.status !== 'cancelled') || [];
+  const paidOrders = validOrders.filter(o => o.payment_status === 'paid');
+  const deliveredOrders = validOrders.filter(o => o.status === 'delivered');
+
+  const totalRevenue = paidOrders.reduce((sum, o) => sum + Number(o.total_amount), 0);
   const totalExpenses = expenses?.reduce((sum, exp) => sum + Number(exp.amount), 0) || 0;
-  
   const pendingInvoices = invoices?.filter(inv => inv.status === 'pending').length || 0;
-  
   const paidInvoices = invoices?.filter(inv => inv.status === 'paid').length || 0;
-  
   const netProfit = totalRevenue - totalExpenses;
 
   return {
@@ -251,7 +274,9 @@ export const useFinancialSummary = () => {
     netProfit,
     pendingInvoices,
     paidInvoices,
-    totalOrders: orders?.length || 0,
-    deliveredOrders: orders?.filter(o => o.status === 'delivered').length || 0,
+    totalOrders: validOrders.length,
+    deliveredOrders: deliveredOrders.length,
+    paidOrders: paidOrders.length,
+    cancelledOrders: (orders?.length || 0) - validOrders.length,
   };
 };

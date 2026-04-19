@@ -10,10 +10,16 @@ import OrderTracker from '@/components/OrderTracker';
 import DeliveryTracker from '@/components/DeliveryTracker';
 import BackButton from '@/components/BackButton';
 import MascotGuide from '@/components/MascotGuide';
+import bgSpirits from '@/assets/bg-spirits.jpg';
 
 const Spirits = () => {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
+      <div
+        className="fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat opacity-15 dark:opacity-10"
+        style={{ backgroundImage: `url(${bgSpirits})` }}
+        aria-hidden="true"
+      />
       <Header />
       <RefreshAlert />
       <AIHelpChat />
