@@ -92,6 +92,10 @@ const PaymentSection = ({ totalAmount, onPaymentConfirmed, isConfirmed, phoneNum
   }, []);
 
   const handlePaystackPayment = async () => {
+    if (maintenanceLocked) {
+      toast.error('Payments are temporarily disabled — system under maintenance.');
+      return;
+    }
     if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       toast.error('Please enter a valid email address');
       return;
@@ -147,6 +151,25 @@ const PaymentSection = ({ totalAmount, onPaymentConfirmed, isConfirmed, phoneNum
       toast.error('Payment not yet confirmed. Please complete payment in the Paystack window.');
     }
   };
+
+  if (maintenanceLocked) {
+    return (
+      <Card className="border-amber-500/50 bg-amber-50 dark:bg-amber-950/30">
+        <CardContent className="pt-6 space-y-3">
+          <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300 font-semibold">
+            <Wrench className="h-5 w-5" />
+            Payments Temporarily Disabled
+          </div>
+          <p className="text-sm text-amber-800 dark:text-amber-200">
+            {MAINTENANCE_MESSAGE}
+          </p>
+          <p className="text-xs text-amber-700 dark:text-amber-300">
+            Please do not attempt to pay — no order will be placed. We'll notify you as soon as the system is back online. 🛠️
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (isConfirmed) {
     return (
