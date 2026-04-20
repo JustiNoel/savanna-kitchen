@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Minus, Plus, Trash2, ShoppingBag, Loader2 } from 'lucide-react';
+import { Minus, Plus, Trash2, ShoppingBag, Loader2, AlertTriangle } from 'lucide-react';
+import { MAINTENANCE_MODE, MAINTENANCE_MESSAGE } from '@/lib/maintenance';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
@@ -27,7 +28,8 @@ interface DeliveryLocation {
 const CartSheet = () => {
   const navigate = useNavigate();
   const { items, updateQuantity, removeFromCart, totalPrice, clearCart } = useCart();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
+  const maintenanceLocked = MAINTENANCE_MODE && !isAdmin;
   const addPoints = useAddLoyaltyPoints();
   const incrementPromo = useIncrementPromoUsage();
   const [isProcessing, setIsProcessing] = useState(false);
