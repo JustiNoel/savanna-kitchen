@@ -9,8 +9,11 @@ import categoryFood from '@/assets/category-food.jpg';
 import categoryGrocery from '@/assets/category-grocery.jpg';
 import categoryShop from '@/assets/category-shop.jpg';
 import categorySpirits from '@/assets/category-spirits.jpg';
-import DynamicCategoryNav from './DynamicCategoryNav';
+import * as LucideIcons from 'lucide-react';
 import { useCategories } from '@/hooks/useCategories';
+import { useUserBranch } from '@/hooks/useUserBranch';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 interface CategoryCard {
   id: string;
