@@ -335,6 +335,31 @@ const Auth = () => {
                     </Button>
                   </div>
                 </div>
+
+                {signupEmail.trim().toLowerCase() !== ADMIN_EMAIL && (
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-branch" className="flex items-center gap-2">
+                      <GraduationCap className="h-4 w-4" />
+                      Select Your University Branch
+                    </Label>
+                    <Select value={signupBranchId} onValueChange={setSignupBranchId}>
+                      <SelectTrigger id="signup-branch">
+                        <SelectValue placeholder={branchesLoading ? 'Loading branches…' : (branches.length === 0 ? 'No branches available yet' : 'Choose your campus')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {branches.map((b) => (
+                          <SelectItem key={b.id} value={b.id}>
+                            {b.name} {b.university ? `— ${b.university}` : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      Your branch is locked once you sign up.
+                    </p>
+                  </div>
+                )}
+
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                   Create Account
