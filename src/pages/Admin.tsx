@@ -20,7 +20,7 @@ import {
   ArrowLeft, Plus, Pencil, Trash2, Loader2, ShoppingBag, CalendarDays, 
   UtensilsCrossed, Sparkles, Trophy, Users, Lock, Eye, EyeOff, MapPin, 
   UserPlus, Shield, Leaf, Store, Wine, Bike, Mail, Phone, DollarSign, Package,
-  BarChart3, Tag, ClipboardList, GraduationCap, UserCog
+  BarChart3, Tag, ClipboardList, GraduationCap, UserCog, LayoutGrid
 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -32,6 +32,7 @@ import SurveysSection from '@/components/admin/SurveysSection';
 import SecuritySection from '@/components/admin/SecuritySection';
 import BranchesSection from '@/components/admin/BranchesSection';
 import BranchManagersSection from '@/components/admin/BranchManagersSection';
+import CategoriesSection from '@/components/admin/CategoriesSection';
 import { usePromoCodes, useCreatePromoCode, useTogglePromoCode, useDeletePromoCode } from '@/hooks/usePromoCodes';
 import { logAuditEvent } from '@/hooks/useAuditLog';
 
@@ -1272,6 +1273,10 @@ const Admin = () => {
               </TabsTrigger>
               {user?.email === 'justinoel254@gmail.com' && (
                 <>
+                  <TabsTrigger value="categories" className="flex items-center gap-1 px-2 py-1.5 text-xs sm:text-sm sm:px-3">
+                    <LayoutGrid className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden xs:inline sm:inline">Categories</span>
+                  </TabsTrigger>
                   <TabsTrigger value="branches" className="flex items-center gap-1 px-2 py-1.5 text-xs sm:text-sm sm:px-3">
                     <GraduationCap className="h-3 w-3 sm:h-4 sm:w-4" />
                     <span className="hidden xs:inline sm:inline">Branches</span>
@@ -2577,9 +2582,12 @@ const Admin = () => {
             <SurveysSection />
           </TabsContent>
 
-          {/* ============ BRANCHES / MANAGERS / SECURITY (super-admin only) ============ */}
+          {/* ============ CATEGORIES / BRANCHES / MANAGERS / SECURITY (super-admin only) ============ */}
           {user?.email === 'justinoel254@gmail.com' && (
             <>
+              <TabsContent value="categories" className="space-y-4">
+                <CategoriesSection />
+              </TabsContent>
               <TabsContent value="branches" className="space-y-4">
                 <BranchesSection />
               </TabsContent>

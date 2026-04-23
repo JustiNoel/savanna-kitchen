@@ -9,6 +9,11 @@ import categoryFood from '@/assets/category-food.jpg';
 import categoryGrocery from '@/assets/category-grocery.jpg';
 import categoryShop from '@/assets/category-shop.jpg';
 import categorySpirits from '@/assets/category-spirits.jpg';
+import * as LucideIcons from 'lucide-react';
+import { useCategories } from '@/hooks/useCategories';
+import { useUserBranch } from '@/hooks/useUserBranch';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 interface CategoryCard {
   id: string;
@@ -63,6 +68,88 @@ const categories: CategoryCard[] = [
     bgGradient: 'from-amber-500/20 to-yellow-500/10',
   },
 ];
+
+const toPascal = (kebab: string) =>
+  kebab.split('-').map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join('');
+
+const renderIcon = (name: string, color?: string, size = 28) => {
+  const Icon = (LucideIcons as any)[toPascal(name)] || (LucideIcons as any).Package;
+  return <Icon size={size} color={color} />;
+};
+
+const PROTECTED_SLUGS = new Set(['food', 'wines', 'spirits', 'shop', 'grocery']);
+
+const CustomCategoriesRow = () => {
+  const { data: cats } = useCategories({ onlyActive: true });
+  const { branchId } = useUserBranch();
+
+  const { data: visibility } = useQuery({
+    queryKey: ['cat-visibility-hero'],
+    queryFn: async () => {
+      const { data } = await supabase.from('category_branch_visibility').select('*');
+      return data || [];
+    },
+  });
+
+  const customCats = (cats || []).filter((c) => {
+    if (PROTECTED_SLUGS.has(c.slug) || c.is_protected) return false;
+    if (c.visibility === 'all') return true;
+    if (!branchId) return false;
+    return visibility?.some((v: any) => v.category_id === c.id && v.branch_id === branchId);
+  });
+
+  if (!customCats.length) return null;
+
+  return (
+    <motion.div
+      className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 max-w-4xl mx-auto mb-8"
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.7 }}
+    >
+      {customCats.map((cat, i) => (
+        <motion.div
+          key={cat.id}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 + i * 0.08 }}
+          whileHover={{ scale: 1.05, y: -8 }}
+          whileTap={{ scale: 0.98 }}
+        >
+          <Link to={`/category/${cat.slug}`} className="block h-full">
+            <Card
+              className="h-full border-2 hover:shadow-2xl overflow-hidden backdrop-blur-sm transition-all duration-300"
+              style={{
+                borderTopColor: cat.color,
+                borderTopWidth: 4,
+                background: `linear-gradient(135deg, ${cat.color}20, ${cat.color}05)`,
+              }}
+            >
+              <CardContent className="p-4 text-center space-y-3">
+                <div
+                  className="mx-auto h-16 w-16 rounded-2xl flex items-center justify-center shadow-md"
+                  style={{ backgroundColor: `${cat.color}30`, color: cat.color }}
+                >
+                  {renderIcon(cat.icon, cat.color, 32)}
+                </div>
+                <div>
+                  <h3 className="font-display text-lg md:text-xl font-bold text-foreground">
+                    {cat.name}
+                  </h3>
+                  {cat.description && (
+                    <p className="text-xs md:text-sm text-muted-foreground line-clamp-2 mt-1">
+                      {cat.description}
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        </motion.div>
+      ))}
+    </motion.div>
+  );
+};
 
 const Hero = () => {
   const { isAdmin } = useAuth();
@@ -136,7 +223,7 @@ const Hero = () => {
           </motion.p>
         </div>
 
-        {/* Category Cards Grid */}
+        {/* Category Cards Grid (default 4) */}
         <motion.div 
           data-tour="hero-categories"
           className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 max-w-4xl mx-auto mb-8"
@@ -182,6 +269,10 @@ const Hero = () => {
             </motion.div>
           ))}
         </motion.div>
+
+        {/* Custom admin-created categories */}
+        <CustomCategoriesRow />
+
 
         {/* Admin Add Button - Only visible to admins */}
         {isAdmin && (

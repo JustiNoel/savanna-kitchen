@@ -17,6 +17,7 @@ import Grocery from "./pages/Grocery";
 import Shop from "./pages/Shop";
 import Spirits from "./pages/Spirits";
 import NotFound from "./pages/NotFound";
+import CategoryPage from "./pages/CategoryPage";
 import NotificationListener from "./components/NotificationListener";
 import MaintenanceBanner from "./components/MaintenanceBanner";
 
@@ -39,6 +40,7 @@ const App = () => (
                 <Route path="/grocery" element={<Grocery />} />
                 <Route path="/shop" element={<Shop />} />
                 <Route path="/spirits" element={<Spirits />} />
+                <Route path="/category/:slug" element={<CategoryPage />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/admin" element={<Admin />} />
