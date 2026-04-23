@@ -29,7 +29,7 @@ const renderIcon = (name: string, color?: string, size = 28) => {
 
 const DynamicCategoryNav = () => {
   const { data: categories, isLoading } = useCategories({ onlyActive: true });
-  const { data: userBranch } = useUserBranch();
+  const { branchId: userBranch } = useUserBranch();
 
   // Get visibility filters
   const { data: visibility } = useQuery({

@@ -13,7 +13,7 @@ import {
   useUpdateCategory,
   useCategoryBranchVisibility,
 } from '@/hooks/useCategories';
-import { useBranches } from '@/hooks/useBranches';
+import { useActiveBranches } from '@/hooks/useBranches';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -90,7 +90,7 @@ const emptyForm: CategoryInput = {
 
 const CategoriesSection = () => {
   const { data: categories, isLoading } = useCategories();
-  const { data: branches } = useBranches();
+  const { data: branches } = useActiveBranches();
   const createMut = useCreateCategory();
   const updateMut = useUpdateCategory();
   const toggleMut = useToggleCategory();
