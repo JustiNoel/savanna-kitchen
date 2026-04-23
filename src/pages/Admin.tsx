@@ -2577,11 +2577,19 @@ const Admin = () => {
             <SurveysSection />
           </TabsContent>
 
-          {/* ============ SECURITY TAB ============ */}
+          {/* ============ BRANCHES / MANAGERS / SECURITY (super-admin only) ============ */}
           {user?.email === 'justinoel254@gmail.com' && (
-            <TabsContent value="security" className="space-y-4">
-              <SecuritySection />
-            </TabsContent>
+            <>
+              <TabsContent value="branches" className="space-y-4">
+                <BranchesSection />
+              </TabsContent>
+              <TabsContent value="branch-managers" className="space-y-4">
+                <BranchManagersSection />
+              </TabsContent>
+              <TabsContent value="security" className="space-y-4">
+                <SecuritySection />
+              </TabsContent>
+            </>
           )}
         </Tabs>
       </main>
