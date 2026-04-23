@@ -20,7 +20,7 @@ import {
   ArrowLeft, Plus, Pencil, Trash2, Loader2, ShoppingBag, CalendarDays, 
   UtensilsCrossed, Sparkles, Trophy, Users, Lock, Eye, EyeOff, MapPin, 
   UserPlus, Shield, Leaf, Store, Wine, Bike, Mail, Phone, DollarSign, Package,
-  BarChart3, Tag, ClipboardList, GraduationCap, UserCog
+  BarChart3, Tag, ClipboardList, GraduationCap, UserCog, LayoutGrid
 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -32,6 +32,7 @@ import SurveysSection from '@/components/admin/SurveysSection';
 import SecuritySection from '@/components/admin/SecuritySection';
 import BranchesSection from '@/components/admin/BranchesSection';
 import BranchManagersSection from '@/components/admin/BranchManagersSection';
+import CategoriesSection from '@/components/admin/CategoriesSection';
 import { usePromoCodes, useCreatePromoCode, useTogglePromoCode, useDeletePromoCode } from '@/hooks/usePromoCodes';
 import { logAuditEvent } from '@/hooks/useAuditLog';
 
