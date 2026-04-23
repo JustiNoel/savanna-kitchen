@@ -18,6 +18,7 @@ import Shop from "./pages/Shop";
 import Spirits from "./pages/Spirits";
 import NotFound from "./pages/NotFound";
 import NotificationListener from "./components/NotificationListener";
+import MaintenanceBanner from "./components/MaintenanceBanner";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ const App = () => (
             <Sonner />
             <NotificationListener />
             <BrowserRouter>
+              <MaintenanceBanner />
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/food" element={<Food />} />

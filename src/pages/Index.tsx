@@ -4,6 +4,7 @@ import WelcomeGreeting from '@/components/WelcomeGreeting';
 import WelcomePopup from '@/components/WelcomePopup';
 import AIHelpChat from '@/components/AIHelpChat';
 import FloatingCart from '@/components/FloatingCart';
+import MascotGuide from '@/components/MascotGuide';
 import PushNotificationPrompt from '@/components/PushNotificationPrompt';
 import RefreshAlert from '@/components/RefreshAlert';
 import Footer from '@/components/Footer';
@@ -16,6 +17,7 @@ const Index = () => {
       <WelcomePopup />
       <AIHelpChat />
       <FloatingCart />
+      <MascotGuide />
       <PushNotificationPrompt />
       <RefreshAlert />
       <main className="flex-1">

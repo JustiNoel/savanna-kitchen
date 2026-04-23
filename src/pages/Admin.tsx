@@ -20,7 +20,7 @@ import {
   ArrowLeft, Plus, Pencil, Trash2, Loader2, ShoppingBag, CalendarDays, 
   UtensilsCrossed, Sparkles, Trophy, Users, Lock, Eye, EyeOff, MapPin, 
   UserPlus, Shield, Leaf, Store, Wine, Bike, Mail, Phone, DollarSign, Package,
-  BarChart3, Tag, ClipboardList
+  BarChart3, Tag, ClipboardList, GraduationCap, UserCog
 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -29,7 +29,11 @@ import FinanceSection from '@/components/admin/FinanceSection';
 import InventoryAlerts from '@/components/InventoryAlerts';
 import AnalyticsSection from '@/components/admin/AnalyticsSection';
 import SurveysSection from '@/components/admin/SurveysSection';
+import SecuritySection from '@/components/admin/SecuritySection';
+import BranchesSection from '@/components/admin/BranchesSection';
+import BranchManagersSection from '@/components/admin/BranchManagersSection';
 import { usePromoCodes, useCreatePromoCode, useTogglePromoCode, useDeletePromoCode } from '@/hooks/usePromoCodes';
+import { logAuditEvent } from '@/hooks/useAuditLog';
 
 interface MenuItemForm {
   name: string;
@@ -191,6 +195,12 @@ const Admin = () => {
   // Admin management state
   const [newAdminEmail, setNewAdminEmail] = useState('');
   const [addAdminDialogOpen, setAddAdminDialogOpen] = useState(false);
+  
+  // Password reset state
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetNewPassword, setResetNewPassword] = useState('');
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
+  const [showResetPassword, setShowResetPassword] = useState(false);
   
   // Rider management state
   const [newRiderEmail, setNewRiderEmail] = useState('');
@@ -398,6 +408,13 @@ const Admin = () => {
     },
     enabled: isAdmin,
   });
+
+  // Log admin access
+  useEffect(() => {
+    if (isAdmin && user) {
+      logAuditEvent(user.id, user.email || null, 'admin_access', { is_admin: true });
+    }
+  }, [isAdmin, user]);
 
   // ============ REALTIME SUBSCRIPTIONS ============
   useEffect(() => {
@@ -851,7 +868,17 @@ const Admin = () => {
 
   const removeRider = useMutation({
     mutationFn: async ({ riderId, userId }: { riderId: string; userId: string }) => {
-      // Delete rider profile first
+      // First, unassign this rider from any orders to avoid FK constraint
+      const { error: unassignError } = await supabase
+        .from('orders')
+        .update({ rider_id: null })
+        .eq('rider_id', riderId);
+      if (unassignError) {
+        console.error('Unassign rider error:', unassignError);
+        throw new Error('Failed to unassign rider from orders: ' + unassignError.message);
+      }
+
+      // Delete rider profile
       const { error: riderError } = await supabase.from('riders').delete().eq('id', riderId);
       if (riderError) {
         console.error('Rider delete error:', riderError);
@@ -1243,6 +1270,22 @@ const Admin = () => {
                 <ClipboardList className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span className="hidden xs:inline sm:inline">Surveys</span>
               </TabsTrigger>
+              {user?.email === 'justinoel254@gmail.com' && (
+                <>
+                  <TabsTrigger value="branches" className="flex items-center gap-1 px-2 py-1.5 text-xs sm:text-sm sm:px-3">
+                    <GraduationCap className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden xs:inline sm:inline">Branches</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="branch-managers" className="flex items-center gap-1 px-2 py-1.5 text-xs sm:text-sm sm:px-3">
+                    <UserCog className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden xs:inline sm:inline">Managers</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="security" className="flex items-center gap-1 px-2 py-1.5 text-xs sm:text-sm sm:px-3">
+                    <Lock className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden xs:inline sm:inline">Security</span>
+                  </TabsTrigger>
+                </>
+              )}
             </TabsList>
           </div>
 
@@ -2060,6 +2103,39 @@ const Admin = () => {
                 <CardContent><div className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-green-500" /><span className="text-2xl font-bold">{loyaltyData?.reduce((sum: number, l: any) => sum + (l.total_redeemed || 0), 0).toLocaleString() || 0}</span></div></CardContent>
               </Card>
             </div>
+
+            {/* Top 3 Champions */}
+            {loyaltyData && loyaltyData.length > 0 && (() => {
+              const sorted = [...loyaltyData].sort((a: any, b: any) => (b.points || 0) - (a.points || 0));
+              const top3 = sorted.slice(0, Math.min(3, sorted.length));
+              const badgeConfig = [
+                { label: '🥇 Gold Champion', gradient: 'from-yellow-400 via-yellow-500 to-amber-600', border: 'border-yellow-400', shadow: 'shadow-yellow-400/30', emoji: '👑' },
+                { label: '🥈 Silver Champion', gradient: 'from-gray-300 via-gray-400 to-gray-500', border: 'border-gray-400', shadow: 'shadow-gray-400/30', emoji: '⭐' },
+                { label: '🥉 Bronze Champion', gradient: 'from-orange-400 via-orange-500 to-orange-700', border: 'border-orange-400', shadow: 'shadow-orange-400/30', emoji: '🌟' },
+              ];
+              return (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {top3.map((user: any, i: number) => (
+                    <Card key={user.id} className={`relative overflow-hidden border-2 ${badgeConfig[i].border} shadow-lg ${badgeConfig[i].shadow}`}>
+                      <div className={`absolute inset-0 bg-gradient-to-br ${badgeConfig[i].gradient} opacity-10`} />
+                      <CardContent className="relative p-6 text-center space-y-3">
+                        <div className="text-5xl">{badgeConfig[i].emoji}</div>
+                        <div className={`inline-block px-4 py-1 rounded-full bg-gradient-to-r ${badgeConfig[i].gradient} text-white text-sm font-bold`}>
+                          {badgeConfig[i].label}
+                        </div>
+                        <h3 className="font-display text-lg font-bold">{user.profiles?.full_name || 'Unknown'}</h3>
+                        <p className="text-sm text-muted-foreground">{user.profiles?.email}</p>
+                        <div className="text-3xl font-bold text-primary">{user.points.toLocaleString()} pts</div>
+                        <p className="text-xs text-muted-foreground italic">
+                          🎉 Congratulations on earning the {badgeConfig[i].label.split(' ').slice(1).join(' ')} badge!
+                        </p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              );
+            })()}
+
             <Card>
               <CardHeader><CardTitle>🏆 Loyalty Leaderboard (Most → Least Active)</CardTitle></CardHeader>
               <CardContent>
@@ -2077,6 +2153,7 @@ const Admin = () => {
                         <TableHead className="text-right">Points</TableHead>
                         <TableHead className="text-right">Earned</TableHead>
                         <TableHead className="text-right">Redeemed</TableHead>
+                        <TableHead className="text-center">Badge</TableHead>
                         <TableHead className="text-center">Tier</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -2085,6 +2162,7 @@ const Admin = () => {
                         ?.sort((a: any, b: any) => (b.points || 0) - (a.points || 0))
                         .map((loyalty: any, index: number) => {
                         const rankEmoji = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`;
+                        const badge = index === 0 ? '👑 Gold' : index === 1 ? '⭐ Silver' : index === 2 ? '🌟 Bronze' : null;
                         const tier = loyalty.points >= 1000 ? { label: 'Diamond', color: 'bg-blue-500' }
                           : loyalty.points >= 500 ? { label: 'Gold', color: 'bg-yellow-500' }
                           : loyalty.points >= 250 ? { label: 'Silver', color: 'bg-gray-400' }
@@ -2098,6 +2176,7 @@ const Admin = () => {
                             <TableCell className="text-right"><Badge variant="outline" className="font-bold">{loyalty.points.toLocaleString()}</Badge></TableCell>
                             <TableCell className="text-right text-green-600 font-medium">+{loyalty.total_earned.toLocaleString()}</TableCell>
                             <TableCell className="text-right text-orange-600 font-medium">-{loyalty.total_redeemed.toLocaleString()}</TableCell>
+                            <TableCell className="text-center">{badge ? <Badge variant="secondary" className="font-bold">{badge}</Badge> : '-'}</TableCell>
                             <TableCell className="text-center"><Badge className={`${tier.color} text-white`}>{tier.label}</Badge></TableCell>
                           </TableRow>
                         );
@@ -2249,6 +2328,81 @@ const Admin = () => {
                 ))}
               </div>
             )}
+
+            {/* Password Reset Section */}
+            <Card className="border-2 border-dashed border-primary/30">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Lock className="h-5 w-5 text-primary" />
+                  Reset User Password
+                </CardTitle>
+                <CardDescription>Reset the password for any registered user who has forgotten their passcode.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                  <div className="space-y-2">
+                    <Label>User Email</Label>
+                    <Input 
+                      type="email" 
+                      value={resetEmail} 
+                      onChange={(e) => setResetEmail(e.target.value)} 
+                      placeholder="user@email.com" 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>New Password</Label>
+                    <div className="relative">
+                      <Input 
+                        type={showResetPassword ? 'text' : 'password'} 
+                        value={resetNewPassword} 
+                        onChange={(e) => setResetNewPassword(e.target.value)} 
+                        placeholder="Min 6 characters" 
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-0 top-0 h-full px-3"
+                        onClick={() => setShowResetPassword(!showResetPassword)}
+                      >
+                        {showResetPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                  </div>
+                  <Button 
+                    onClick={async () => {
+                      if (!resetEmail || !resetNewPassword) {
+                        toast.error('Enter both email and new password');
+                        return;
+                      }
+                      if (resetNewPassword.length < 6) {
+                        toast.error('Password must be at least 6 characters');
+                        return;
+                      }
+                      setIsResettingPassword(true);
+                      try {
+                        const { data, error } = await supabase.functions.invoke('admin-reset-password', {
+                          body: { email: resetEmail, newPassword: resetNewPassword },
+                        });
+                        if (error) throw error;
+                        if (data?.error) throw new Error(data.error);
+                        toast.success(`Password reset successfully for ${resetEmail}`);
+                        setResetEmail('');
+                        setResetNewPassword('');
+                      } catch (err: any) {
+                        toast.error(err.message || 'Failed to reset password');
+                      } finally {
+                        setIsResettingPassword(false);
+                      }
+                    }}
+                    disabled={isResettingPassword || !resetEmail || !resetNewPassword}
+                  >
+                    {isResettingPassword ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Lock className="h-4 w-4 mr-2" />}
+                    Reset Password
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* ============ FINANCE TAB ============ */}
@@ -2422,6 +2576,21 @@ const Admin = () => {
           <TabsContent value="surveys" className="space-y-4">
             <SurveysSection />
           </TabsContent>
+
+          {/* ============ BRANCHES / MANAGERS / SECURITY (super-admin only) ============ */}
+          {user?.email === 'justinoel254@gmail.com' && (
+            <>
+              <TabsContent value="branches" className="space-y-4">
+                <BranchesSection />
+              </TabsContent>
+              <TabsContent value="branch-managers" className="space-y-4">
+                <BranchManagersSection />
+              </TabsContent>
+              <TabsContent value="security" className="space-y-4">
+                <SecuritySection />
+              </TabsContent>
+            </>
+          )}
         </Tabs>
       </main>
     </div>

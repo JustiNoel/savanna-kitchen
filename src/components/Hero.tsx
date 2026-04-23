@@ -1,15 +1,19 @@
 import { motion } from 'framer-motion';
-import { UtensilsCrossed, ShoppingBasket, Store, Wine, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import kitchenVideo from '@/assets/kitchen-background.mp4';
+import categoryFood from '@/assets/category-food.jpg';
+import categoryGrocery from '@/assets/category-grocery.jpg';
+import categoryShop from '@/assets/category-shop.jpg';
+import categorySpirits from '@/assets/category-spirits.jpg';
 
 interface CategoryCard {
   id: string;
   name: string;
-  icon: React.ReactNode;
+  image: string;
   emoji: string;
   description: string;
   href: string;
@@ -21,7 +25,7 @@ const categories: CategoryCard[] = [
   {
     id: 'food',
     name: 'Food',
-    icon: <UtensilsCrossed className="h-8 w-8" />,
+    image: categoryFood,
     emoji: '🍽️',
     description: 'Delicious meals & Book your table',
     href: '/food',
@@ -31,7 +35,7 @@ const categories: CategoryCard[] = [
   {
     id: 'grocery',
     name: 'Grocery',
-    icon: <ShoppingBasket className="h-8 w-8" />,
+    image: categoryGrocery,
     emoji: '🥕',
     description: 'Fresh vegetables & fruits',
     href: '/grocery',
@@ -41,7 +45,7 @@ const categories: CategoryCard[] = [
   {
     id: 'shop',
     name: 'Shop',
-    icon: <Store className="h-8 w-8" />,
+    image: categoryShop,
     emoji: '🛒',
     description: 'Everyday essentials',
     href: '/shop',
@@ -51,7 +55,7 @@ const categories: CategoryCard[] = [
   {
     id: 'spirits',
     name: 'Spirits',
-    icon: <Wine className="h-8 w-8" />,
+    image: categorySpirits,
     emoji: '🍾',
     description: 'Premium drinks & spirits',
     href: '/spirits',
@@ -134,6 +138,7 @@ const Hero = () => {
 
         {/* Category Cards Grid */}
         <motion.div 
+          data-tour="hero-categories"
           className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 max-w-4xl mx-auto mb-8"
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
@@ -150,16 +155,27 @@ const Hero = () => {
             >
               <Link to={category.href} className="block h-full">
                 <Card className={`h-full border-2 hover:border-primary/50 transition-all duration-300 hover:shadow-2xl overflow-hidden bg-gradient-to-br ${category.bgGradient} backdrop-blur-sm`}>
-                  <CardContent className="p-4 md:p-6 text-center">
-                    <div className={`inline-flex items-center justify-center w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-background/80 shadow-lg mb-3 ${category.color}`}>
-                      <span className="text-3xl md:text-4xl">{category.emoji}</span>
+                  <CardContent className="p-0 text-center">
+                    <div className="relative w-full h-28 md:h-36 overflow-hidden rounded-t-lg">
+                      <img 
+                        src={category.image} 
+                        alt={category.name} 
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                        width={512}
+                        height={512}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
+                      <span className="absolute bottom-2 left-1/2 -translate-x-1/2 text-2xl drop-shadow-lg">{category.emoji}</span>
                     </div>
-                    <h3 className="font-display text-lg md:text-xl font-bold mb-1 text-foreground">
-                      {category.name}
-                    </h3>
-                    <p className="text-xs md:text-sm text-muted-foreground line-clamp-2">
-                      {category.description}
-                    </p>
+                    <div className="p-3 md:p-4">
+                      <h3 className="font-display text-lg md:text-xl font-bold mb-1 text-foreground">
+                        {category.name}
+                      </h3>
+                      <p className="text-xs md:text-sm text-muted-foreground line-clamp-2">
+                        {category.description}
+                      </p>
+                    </div>
                   </CardContent>
                 </Card>
               </Link>
@@ -188,6 +204,7 @@ const Hero = () => {
 
         {/* Quick Stats */}
         <motion.div 
+          data-tour="hero-stats"
           className="grid grid-cols-3 gap-4 max-w-md mx-auto mt-12 backdrop-blur-sm bg-background/40 rounded-2xl p-4"
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}

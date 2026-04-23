@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Minus, Plus, Trash2, ShoppingBag, Loader2 } from 'lucide-react';
+import { Minus, Plus, Trash2, ShoppingBag, Loader2, AlertTriangle } from 'lucide-react';
+import { MAINTENANCE_MODE, MAINTENANCE_MESSAGE } from '@/lib/maintenance';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
@@ -27,7 +28,8 @@ interface DeliveryLocation {
 const CartSheet = () => {
   const navigate = useNavigate();
   const { items, updateQuantity, removeFromCart, totalPrice, clearCart } = useCart();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
+  const maintenanceLocked = MAINTENANCE_MODE && !isAdmin;
   const addPoints = useAddLoyaltyPoints();
   const incrementPromo = useIncrementPromoUsage();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -293,6 +295,21 @@ const CartSheet = () => {
       </SheetHeader>
 
       <div className="flex-1 overflow-y-auto py-4 space-y-4">
+        {maintenanceLocked && (
+          <div className="rounded-lg border-2 border-amber-500/50 bg-amber-50 dark:bg-amber-950/30 p-4 space-y-2">
+            <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300 font-semibold">
+              <AlertTriangle className="h-5 w-5" />
+              System Under Maintenance
+            </div>
+            <p className="text-sm text-amber-800 dark:text-amber-200">
+              {MAINTENANCE_MESSAGE}
+            </p>
+            <p className="text-xs text-amber-700 dark:text-amber-300">
+              Ordering is temporarily disabled until further notice.
+            </p>
+          </div>
+        )}
+
         {items.map((item) => {
           const imageUrl = getImageForDish(item.name);
           return (
@@ -323,7 +340,7 @@ const CartSheet = () => {
         })}
 
         {/* Step 1: Location Picker */}
-        {user && (
+        {user && !maintenanceLocked && (
           <div className="py-2">
             <div className="flex items-center gap-2 mb-2">
               <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${deliveryLocation ? 'bg-green-500 text-white' : 'bg-primary text-primary-foreground'}`}>1</div>
@@ -334,7 +351,7 @@ const CartSheet = () => {
         )}
 
         {/* Step 2: Promo Code */}
-        {user && deliveryLocation && (
+        {user && !maintenanceLocked && deliveryLocation && (
           <div className="py-2">
             <div className="flex items-center gap-2 mb-2">
               <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${appliedPromoCode ? 'bg-green-500 text-white' : 'bg-primary text-primary-foreground'}`}>2</div>
@@ -352,7 +369,7 @@ const CartSheet = () => {
         )}
 
         {/* Step 3: Payment */}
-        {user && deliveryLocation && (
+        {user && !maintenanceLocked && deliveryLocation && (
           <div className="py-2">
             <div className="flex items-center gap-2 mb-2">
               <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${paymentConfirmed ? 'bg-green-500 text-white' : 'bg-primary text-primary-foreground'}`}>3</div>

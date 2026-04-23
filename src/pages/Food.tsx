@@ -11,24 +11,32 @@ import RefreshAlert from '@/components/RefreshAlert';
 import OrderTracker from '@/components/OrderTracker';
 import DeliveryTracker from '@/components/DeliveryTracker';
 import BackButton from '@/components/BackButton';
+import MascotGuide from '@/components/MascotGuide';
+import bgFood from '@/assets/bg-food.jpg';
 
 const Food = () => {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
+      <div
+        className="fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat opacity-15 dark:opacity-10"
+        style={{ backgroundImage: `url(${bgFood})` }}
+        aria-hidden="true"
+      />
       <Header />
       <RefreshAlert />
       <AIHelpChat />
       <FloatingCart />
+      <MascotGuide />
       <main className="pt-20">
         <div className="container mx-auto px-4 py-4">
           <BackButton />
         </div>
-        <CategoryWeeklySpecials category="food" />
-        <DailyDishes />
-        <MenuSection />
+        <div data-tour="weekly-specials"><CategoryWeeklySpecials category="food" /></div>
+        <div data-tour="daily-dishes"><DailyDishes /></div>
+        <div data-tour="menu"><MenuSection /></div>
         <OrderTracker />
         <DeliveryTracker />
-        <ReservationForm />
+        <div data-tour="reservation"><ReservationForm /></div>
         <ReviewsSection />
       </main>
       <Footer />

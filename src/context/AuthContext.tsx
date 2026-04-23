@@ -1,13 +1,14 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { logAuditEvent } from '@/hooks/useAuditLog';
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   isAdmin: boolean;
   loading: boolean;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, fullName: string, branchId?: string | null) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
@@ -48,6 +49,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(session?.user ?? null);
         setLoading(false);
         
+        // Log auth events
+        if (session?.user && (event === 'SIGNED_IN')) {
+          logAuditEvent(session.user.id, session.user.email || null, 'login');
+        }
+        if (event === 'SIGNED_OUT') {
+          // user is already null
+        }
+        
         // Check admin role in a deferred manner
         if (session?.user) {
           setTimeout(() => {
@@ -73,19 +82,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, fullName: string) => {
+  const signUp = async (email: string, password: string, fullName: string, branchId?: string | null) => {
     const redirectUrl = `${window.location.origin}/`;
     
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: redirectUrl,
         data: {
           full_name: fullName,
+          branch_id: branchId || null,
         },
       },
     });
+    if (!error && data.user) {
+      logAuditEvent(data.user.id, email, 'signup');
+    }
     return { error };
   };
 
@@ -98,6 +111,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
+    if (user) {
+      logAuditEvent(user.id, user.email || null, 'logout');
+    }
     await supabase.auth.signOut();
     setIsAdmin(false);
   };
