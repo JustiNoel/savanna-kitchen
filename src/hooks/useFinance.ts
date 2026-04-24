@@ -262,7 +262,21 @@ export const useFinancialSummary = () => {
   const paidOrders = validOrders.filter(o => o.payment_status === 'paid');
   const deliveredOrders = validOrders.filter(o => o.status === 'delivered');
 
-  const totalRevenue = paidOrders.reduce((sum, o) => sum + Number(o.total_amount), 0);
+  const grossRevenue = paidOrders.reduce((sum, o) => sum + Number(o.total_amount), 0);
+  // Subtract any refunds recorded in financial_transactions (e.g. cancelled-after-paid orders)
+  const refundsTotal = useQuery({
+    queryKey: ['finance-refunds'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('financial_transactions')
+        .select('amount')
+        .eq('type', 'refund');
+      if (error) throw error;
+      return (data || []).reduce((s, r) => s + Number(r.amount), 0);
+    },
+    refetchInterval: 15000,
+  }).data || 0;
+  const totalRevenue = Math.max(0, grossRevenue - refundsTotal);
   const totalExpenses = expenses?.reduce((sum, exp) => sum + Number(exp.amount), 0) || 0;
   const pendingInvoices = invoices?.filter(inv => inv.status === 'pending').length || 0;
   const paidInvoices = invoices?.filter(inv => inv.status === 'paid').length || 0;
@@ -270,6 +284,8 @@ export const useFinancialSummary = () => {
 
   return {
     totalRevenue,
+    grossRevenue,
+    refundsTotal,
     totalExpenses,
     netProfit,
     pendingInvoices,
