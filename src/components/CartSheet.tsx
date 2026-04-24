@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Minus, Plus, Trash2, ShoppingBag, Loader2, AlertTriangle } from 'lucide-react';
-import { MAINTENANCE_MODE, MAINTENANCE_MESSAGE } from '@/lib/maintenance';
+import { useAppSettings } from '@/hooks/useAppSettings';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
@@ -31,7 +31,9 @@ const CartSheet = () => {
   const { items, updateQuantity, removeFromCart, totalPrice, clearCart } = useCart();
   const { user, isAdmin } = useAuth();
   const { branchId } = useUserBranch();
-  const maintenanceLocked = MAINTENANCE_MODE && !isAdmin;
+  const { settings: appSettings } = useAppSettings();
+  const maintenanceLocked = appSettings.maintenance_mode && !isAdmin;
+  const MAINTENANCE_MESSAGE = appSettings.maintenance_message;
   const addPoints = useAddLoyaltyPoints();
   const incrementPromo = useIncrementPromoUsage();
   const [isProcessing, setIsProcessing] = useState(false);
