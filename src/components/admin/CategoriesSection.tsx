@@ -489,6 +489,13 @@ const CategoriesSection = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Manage items inside a category */}
+      <CategoryItemsDialog
+        category={itemsCategory}
+        open={!!itemsCategory}
+        onOpenChange={(o) => !o && setItemsCategory(null)}
+      />
     </div>
   );
 };
