@@ -20,7 +20,7 @@ import {
   ArrowLeft, Plus, Pencil, Trash2, Loader2, ShoppingBag, CalendarDays, 
   UtensilsCrossed, Sparkles, Trophy, Users, Lock, Eye, EyeOff, MapPin, 
   UserPlus, Shield, Leaf, Store, Wine, Bike, Mail, Phone, DollarSign, Package,
-  BarChart3, Tag, ClipboardList, GraduationCap, UserCog, LayoutGrid
+  BarChart3, Tag, ClipboardList, GraduationCap, UserCog, LayoutGrid, Wrench
 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -33,6 +33,7 @@ import SecuritySection from '@/components/admin/SecuritySection';
 import BranchesSection from '@/components/admin/BranchesSection';
 import BranchManagersSection from '@/components/admin/BranchManagersSection';
 import CategoriesSection from '@/components/admin/CategoriesSection';
+import MaintenanceToggleCard from '@/components/admin/MaintenanceToggleCard';
 import { usePromoCodes, useCreatePromoCode, useTogglePromoCode, useDeletePromoCode } from '@/hooks/usePromoCodes';
 import { logAuditEvent } from '@/hooks/useAuditLog';
 
@@ -1288,6 +1289,10 @@ const Admin = () => {
                   <TabsTrigger value="security" className="flex items-center gap-1 px-2 py-1.5 text-xs sm:text-sm sm:px-3">
                     <Lock className="h-3 w-3 sm:h-4 sm:w-4" />
                     <span className="hidden xs:inline sm:inline">Security</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="settings" className="flex items-center gap-1 px-2 py-1.5 text-xs sm:text-sm sm:px-3">
+                    <Wrench className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden xs:inline sm:inline">Settings</span>
                   </TabsTrigger>
                 </>
               )}
@@ -2596,6 +2601,9 @@ const Admin = () => {
               </TabsContent>
               <TabsContent value="security" className="space-y-4">
                 <SecuritySection />
+              </TabsContent>
+              <TabsContent value="settings" className="space-y-4">
+                <MaintenanceToggleCard />
               </TabsContent>
             </>
           )}

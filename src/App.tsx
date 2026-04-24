@@ -11,6 +11,7 @@ import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
 import Admin from "./pages/Admin";
 import Rider from "./pages/Rider";
+import BranchDashboard from "./pages/BranchDashboard";
 import ResetPassword from "./pages/ResetPassword";
 import Food from "./pages/Food";
 import Grocery from "./pages/Grocery";
@@ -45,6 +46,7 @@ const App = () => (
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/rider" element={<Rider />} />
+                <Route path="/branch-dashboard" element={<BranchDashboard />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />

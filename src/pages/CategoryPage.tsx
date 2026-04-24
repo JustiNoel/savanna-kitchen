@@ -57,11 +57,17 @@ const CategoryPage = () => {
     queryKey: ['category-items', category?.id, branchId],
     queryFn: async () => {
       if (!category) return [];
+      // Branch-aware: include items with no branch (global) OR matching the user's branch
       let q = supabase
         .from('menu_items')
         .select('*')
         .eq('category_id', category.id)
         .eq('is_available', true);
+      if (branchId) {
+        q = q.or(`branch_id.is.null,branch_id.eq.${branchId}`);
+      } else {
+        q = q.is('branch_id', null);
+      }
       const { data, error } = await q;
       if (error) throw error;
       return data || [];

@@ -7,6 +7,7 @@ import FloatingCart from '@/components/FloatingCart';
 import MascotGuide from '@/components/MascotGuide';
 import PushNotificationPrompt from '@/components/PushNotificationPrompt';
 import RefreshAlert from '@/components/RefreshAlert';
+import BranchSelectModal from '@/components/BranchSelectModal';
 import Footer from '@/components/Footer';
 
 const Index = () => {
@@ -15,6 +16,7 @@ const Index = () => {
       <Header />
       <WelcomeGreeting />
       <WelcomePopup />
+      <BranchSelectModal />
       <AIHelpChat />
       <FloatingCart />
       <MascotGuide />

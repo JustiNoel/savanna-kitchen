@@ -46,6 +46,9 @@ export interface Expense {
   created_by: string | null;
 }
 
+// Default page size keeps queries well under Supabase's 1000-row cap.
+const PAGE_LIMIT = 500;
+
 export const useFinancialTransactions = () => {
   return useQuery({
     queryKey: ['financial-transactions'],
@@ -53,7 +56,8 @@ export const useFinancialTransactions = () => {
       const { data, error } = await supabase
         .from('financial_transactions')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(PAGE_LIMIT);
       if (error) throw error;
       return data as FinancialTransaction[];
     },
@@ -67,7 +71,8 @@ export const useInvoices = () => {
       const { data, error } = await supabase
         .from('invoices')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(PAGE_LIMIT);
       if (error) throw error;
       return data as Invoice[];
     },
@@ -81,7 +86,8 @@ export const useExpenses = () => {
       const { data, error } = await supabase
         .from('expenses')
         .select('*')
-        .order('expense_date', { ascending: false });
+        .order('expense_date', { ascending: false })
+        .limit(PAGE_LIMIT);
       if (error) throw error;
       return data as Expense[];
     },
