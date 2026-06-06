@@ -1,11 +1,12 @@
 import { AlertTriangle } from 'lucide-react';
 import { useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { MAINTENANCE_MODE, MAINTENANCE_MESSAGE } from '@/lib/maintenance';
+import { useAppSettings } from '@/hooks/useAppSettings';
 
 const MaintenanceBanner = () => {
   const { isAdmin } = useAuth();
-  const visible = MAINTENANCE_MODE && !isAdmin;
+  const { settings } = useAppSettings();
+  const visible = settings.maintenance_mode && !isAdmin;
 
   // Push the fixed header & page content down so the banner is never covered.
   useEffect(() => {
@@ -33,7 +34,7 @@ const MaintenanceBanner = () => {
       <div className="container mx-auto px-4 py-2 flex items-center gap-2 text-xs sm:text-sm font-medium">
         <AlertTriangle className="h-4 w-4 flex-shrink-0 animate-pulse" />
         <span className="flex-1 leading-snug">
-          <strong>System Under Maintenance:</strong> {MAINTENANCE_MESSAGE} Ordering & payments are temporarily disabled.
+          <strong>System Under Maintenance:</strong> {settings.maintenance_message} Ordering & payments are temporarily disabled.
         </span>
       </div>
     </div>

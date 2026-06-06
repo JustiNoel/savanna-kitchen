@@ -171,6 +171,7 @@ const SpiritsSection = () => {
                       <span className="font-bold text-primary">{formatPrice(item.price)}</span>
                       <Button
                         size="sm"
+                        aria-label={`Add ${item.name} to cart`}
                         className="h-9 w-9 p-0 rounded-full transition-transform group-hover:scale-110"
                         onClick={(e) => {
                           e.stopPropagation();

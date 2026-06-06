@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle2, CreditCard, Loader2, AlertCircle, ShieldCheck, Wrench } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { MAINTENANCE_MODE, MAINTENANCE_MESSAGE } from '@/lib/maintenance';
+import { useAppSettings } from '@/hooks/useAppSettings';
 import { useAuth } from '@/context/AuthContext';
 
 interface PaymentSectionProps {
@@ -19,7 +19,9 @@ interface PaymentSectionProps {
 
 const PaymentSection = ({ totalAmount, onPaymentConfirmed, isConfirmed, phoneNumber }: PaymentSectionProps) => {
   const { isAdmin } = useAuth();
-  const maintenanceLocked = MAINTENANCE_MODE && !isAdmin;
+  const { settings: appSettings } = useAppSettings();
+  const maintenanceLocked = appSettings.maintenance_mode && !isAdmin;
+  const MAINTENANCE_MESSAGE = appSettings.maintenance_message;
   const [email, setEmail] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);

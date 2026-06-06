@@ -11,12 +11,14 @@ import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
 import Admin from "./pages/Admin";
 import Rider from "./pages/Rider";
+import BranchDashboard from "./pages/BranchDashboard";
 import ResetPassword from "./pages/ResetPassword";
 import Food from "./pages/Food";
 import Grocery from "./pages/Grocery";
 import Shop from "./pages/Shop";
 import Spirits from "./pages/Spirits";
 import NotFound from "./pages/NotFound";
+import CategoryPage from "./pages/CategoryPage";
 import NotificationListener from "./components/NotificationListener";
 import MaintenanceBanner from "./components/MaintenanceBanner";
 
@@ -39,10 +41,12 @@ const App = () => (
                 <Route path="/grocery" element={<Grocery />} />
                 <Route path="/shop" element={<Shop />} />
                 <Route path="/spirits" element={<Spirits />} />
+                <Route path="/category/:slug" element={<CategoryPage />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/rider" element={<Rider />} />
+                <Route path="/branch-dashboard" element={<BranchDashboard />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />

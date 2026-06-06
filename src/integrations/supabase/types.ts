@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_settings: {
+        Row: {
+          id: number
+          maintenance_message: string
+          maintenance_mode: boolean
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          id?: number
+          maintenance_message?: string
+          maintenance_mode?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          id?: number
+          maintenance_message?: string
+          maintenance_mode?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           created_at: string
@@ -112,6 +136,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "branch_menu_overrides_branch_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "branch_menu_overrides_branch_id_fkey"
             columns: ["branch_id"]
             isOneToOne: false
@@ -152,6 +183,104 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      categories: {
+        Row: {
+          color: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          display_order: number
+          icon: string
+          id: string
+          is_active: boolean
+          is_protected: boolean
+          name: string
+          slug: string
+          updated_at: string
+          visibility: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          display_order?: number
+          icon?: string
+          id?: string
+          is_active?: boolean
+          is_protected?: boolean
+          name: string
+          slug: string
+          updated_at?: string
+          visibility?: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          display_order?: number
+          icon?: string
+          id?: string
+          is_active?: boolean
+          is_protected?: boolean
+          name?: string
+          slug?: string
+          updated_at?: string
+          visibility?: string
+        }
+        Relationships: []
+      }
+      category_branch_visibility: {
+        Row: {
+          branch_id: string
+          category_id: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          branch_id: string
+          category_id: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          branch_id?: string
+          category_id?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "category_branch_vis_branch_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "category_branch_vis_category_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "category_branch_visibility_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "category_branch_visibility_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       expenses: {
         Row: {
@@ -417,53 +546,118 @@ export type Database = {
         }
         Relationships: []
       }
+      menu_item_branch_visibility: {
+        Row: {
+          branch_id: string
+          created_at: string
+          id: string
+          menu_item_id: string
+        }
+        Insert: {
+          branch_id: string
+          created_at?: string
+          id?: string
+          menu_item_id: string
+        }
+        Update: {
+          branch_id?: string
+          created_at?: string
+          id?: string
+          menu_item_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_item_branch_vis_branch_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "menu_item_branch_vis_item_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "menu_item_branch_visibility_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "menu_item_branch_visibility_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       menu_items: {
         Row: {
           branch_id: string | null
+          branch_visibility: string
           category: string
+          category_id: string | null
           created_at: string
           description: string | null
           id: string
           image_url: string | null
+          images: string[] | null
           ingredients: string[] | null
           is_available: boolean | null
+          is_featured: boolean
           is_popular: boolean | null
           is_vegetarian: boolean | null
           name: string
           price: number
           spice_level: number | null
+          tags: string[] | null
           updated_at: string
         }
         Insert: {
           branch_id?: string | null
+          branch_visibility?: string
           category: string
+          category_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
           image_url?: string | null
+          images?: string[] | null
           ingredients?: string[] | null
           is_available?: boolean | null
+          is_featured?: boolean
           is_popular?: boolean | null
           is_vegetarian?: boolean | null
           name: string
           price: number
           spice_level?: number | null
+          tags?: string[] | null
           updated_at?: string
         }
         Update: {
           branch_id?: string | null
+          branch_visibility?: string
           category?: string
+          category_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
           image_url?: string | null
+          images?: string[] | null
           ingredients?: string[] | null
           is_available?: boolean | null
+          is_featured?: boolean
           is_popular?: boolean | null
           is_vegetarian?: boolean | null
           name?: string
           price?: number
           spice_level?: number | null
+          tags?: string[] | null
           updated_at?: string
         }
         Relationships: [
@@ -472,6 +666,13 @@ export type Database = {
             columns: ["branch_id"]
             isOneToOne: false
             referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "menu_items_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
             referencedColumns: ["id"]
           },
         ]
@@ -970,10 +1171,24 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "survey_answers_question_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "survey_questions"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "survey_answers_question_id_fkey"
             columns: ["question_id"]
             isOneToOne: false
             referencedRelation: "survey_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "survey_answers_response_fkey"
+            columns: ["survey_response_id"]
+            isOneToOne: false
+            referencedRelation: "survey_responses"
             referencedColumns: ["id"]
           },
           {

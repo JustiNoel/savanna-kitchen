@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Minus, Plus, Trash2, ShoppingBag, Loader2, AlertTriangle } from 'lucide-react';
-import { MAINTENANCE_MODE, MAINTENANCE_MESSAGE } from '@/lib/maintenance';
+import { useAppSettings } from '@/hooks/useAppSettings';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
@@ -16,6 +16,7 @@ import LocationPicker from './LocationPicker';
 import PaymentSection from './PaymentSection';
 import PromoCodeInput from './PromoCodeInput';
 import PostOrderSurvey from './PostOrderSurvey';
+import { useUserBranch } from '@/hooks/useUserBranch';
 
 interface DeliveryLocation {
   address: string;
@@ -29,7 +30,10 @@ const CartSheet = () => {
   const navigate = useNavigate();
   const { items, updateQuantity, removeFromCart, totalPrice, clearCart } = useCart();
   const { user, isAdmin } = useAuth();
-  const maintenanceLocked = MAINTENANCE_MODE && !isAdmin;
+  const { branchId } = useUserBranch();
+  const { settings: appSettings } = useAppSettings();
+  const maintenanceLocked = appSettings.maintenance_mode && !isAdmin;
+  const MAINTENANCE_MESSAGE = appSettings.maintenance_message;
   const addPoints = useAddLoyaltyPoints();
   const incrementPromo = useIncrementPromoUsage();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -133,6 +137,7 @@ const CartSheet = () => {
         .from('orders')
         .insert({
           user_id: user.id,
+          branch_id: branchId,
           total_amount: totalWithFee,
           status: 'pending',
           payment_status: 'paid',
@@ -173,21 +178,8 @@ const CartSheet = () => {
       console.error('Order items error:', error);
     }
 
-    // Non-blocking: financial transaction
-    try {
-      await supabase.from('financial_transactions').insert({
-        order_id: orderId,
-        type: 'income',
-        category: 'order_payment',
-        amount: totalWithFee,
-        description: `Order #${orderId!.slice(0, 8)} - Paystack Payment`,
-        payment_method: 'paystack',
-        reference_number: code,
-        created_by: user.id,
-      });
-    } catch {
-      console.log('Financial transaction will be recorded server-side');
-    }
+    // Financial transaction is recorded server-side by paystack-webhook (single source of truth).
+    // Client no longer inserts here to avoid duplicate income rows.
 
     // Non-blocking: increment promo usage
     if (promoId) {
