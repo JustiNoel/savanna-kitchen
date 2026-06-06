@@ -12,11 +12,18 @@ import OrderTracker from '@/components/OrderTracker';
 import DeliveryTracker from '@/components/DeliveryTracker';
 import BackButton from '@/components/BackButton';
 import MascotGuide from '@/components/MascotGuide';
+import SEO from '@/components/SEO';
 import bgFood from '@/assets/bg-food.jpg';
 
 const Food = () => {
   return (
     <div className="min-h-screen bg-background relative">
+      <SEO
+        title="Food Menu & Table Reservations | Grabbys Maseno"
+        description="Browse the Grabbys kitchen menu, daily dishes and weekly specials, or reserve a table. Hot food delivered to your door in Maseno, Kenya."
+        path="/food"
+        jsonLd={{ '@context': 'https://schema.org', '@type': 'FoodEstablishment', name: 'Grabbys Kitchen', servesCuisine: 'Kenyan', areaServed: 'Maseno, Kisumu, Kenya', url: 'https://grabbys-kitchen.lovable.app/food' }}
+      />
       <div
         className="fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat opacity-15 dark:opacity-10"
         style={{ backgroundImage: `url(${bgFood})` }}
@@ -28,6 +35,7 @@ const Food = () => {
       <FloatingCart />
       <MascotGuide />
       <main className="pt-20">
+        <h1 className="sr-only">Grabbys Food Menu & Table Reservations</h1>
         <div className="container mx-auto px-4 py-4">
           <BackButton />
         </div>
