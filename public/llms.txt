@@ -1,0 +1,15 @@
+# Grabbys
+
+> Grabbys is a Kenyan delivery app for food, groceries, everyday essentials, and premium spirits, serving Maseno and surrounding areas with fast doorstep delivery.
+
+Grabbys ("Taste the Grabbys") is a one-stop online ordering and delivery service built around four pillars: hot food from our kitchen, fresh groceries, everyday shop essentials, and premium spirits & wines. Orders are paid via Paystack (cards, M-Pesa, bank transfers) and delivered to a GPS pin in minutes.
+
+## Pages
+- [Home](/): Brand homepage with all four category entry points and live highlights.
+- [Food](/food): Restaurant menu, daily dishes, weekly specials, and table reservations.
+- [Grocery](/grocery): Fresh vegetables, fruits, and grocery staples for doorstep delivery.
+- [Shop](/shop): Everyday household essentials and convenience items.
+- [Spirits](/spirits): Premium beers, wines, and spirits delivery.
+
+## Optional
+- [Sign in](/auth): Customer account sign-in and registration.

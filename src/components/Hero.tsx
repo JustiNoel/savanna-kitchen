@@ -133,9 +133,9 @@ const CustomCategoriesRow = () => {
                   {renderIcon(cat.icon, cat.color, 32)}
                 </div>
                 <div>
-                  <h3 className="font-display text-lg md:text-xl font-bold text-foreground">
+                  <h2 className="font-display text-lg md:text-xl font-bold text-foreground">
                     {cat.name}
-                  </h3>
+                  </h2>
                   {cat.description && (
                     <p className="text-xs md:text-sm text-muted-foreground line-clamp-2 mt-1">
                       {cat.description}
@@ -256,9 +256,9 @@ const Hero = () => {
                       <span className="absolute bottom-2 left-1/2 -translate-x-1/2 text-2xl drop-shadow-lg">{category.emoji}</span>
                     </div>
                     <div className="p-3 md:p-4">
-                      <h3 className="font-display text-lg md:text-xl font-bold mb-1 text-foreground">
+                      <h2 className="font-display text-lg md:text-xl font-bold mb-1 text-foreground">
                         {category.name}
-                      </h3>
+                      </h2>
                       <p className="text-xs md:text-sm text-muted-foreground line-clamp-2">
                         {category.description}
                       </p>
