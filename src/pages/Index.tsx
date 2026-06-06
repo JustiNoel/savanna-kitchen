@@ -35,6 +35,12 @@ const homeJsonLd = [
 const Index = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <SEO
+        title="Grabbys | Food, Grocery, Shop & Spirits Delivery in Maseno"
+        description="Order food, fresh groceries, everyday essentials and premium spirits in Maseno, Kenya. Fast doorstep delivery from Grabbys."
+        path="/"
+        jsonLd={homeJsonLd}
+      />
       <Header />
       <WelcomeGreeting />
       <WelcomePopup />
