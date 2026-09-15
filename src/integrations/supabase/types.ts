@@ -193,6 +193,7 @@ export type Database = {
           display_order: number
           icon: string
           id: string
+          image_url: string | null
           is_active: boolean
           is_protected: boolean
           name: string
@@ -208,6 +209,7 @@ export type Database = {
           display_order?: number
           icon?: string
           id?: string
+          image_url?: string | null
           is_active?: boolean
           is_protected?: boolean
           name: string
@@ -223,6 +225,7 @@ export type Database = {
           display_order?: number
           icon?: string
           id?: string
+          image_url?: string | null
           is_active?: boolean
           is_protected?: boolean
           name?: string
@@ -277,6 +280,62 @@ export type Database = {
             foreignKeyName: "category_branch_visibility_category_id_fkey"
             columns: ["category_id"]
             isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      category_payment_settings: {
+        Row: {
+          account_name: string | null
+          account_number: string | null
+          bank_name: string | null
+          category_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          partner_name: string | null
+          paybill_number: string | null
+          payout_notes: string | null
+          provider: string
+          till_number: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_name?: string | null
+          account_number?: string | null
+          bank_name?: string | null
+          category_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          partner_name?: string | null
+          paybill_number?: string | null
+          payout_notes?: string | null
+          provider?: string
+          till_number?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_name?: string | null
+          account_number?: string | null
+          bank_name?: string | null
+          category_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          partner_name?: string | null
+          paybill_number?: string | null
+          payout_notes?: string | null
+          provider?: string
+          till_number?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "category_payment_settings_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: true
             referencedRelation: "categories"
             referencedColumns: ["id"]
           },
@@ -1031,6 +1090,78 @@ export type Database = {
           vehicle_type?: string | null
         }
         Relationships: []
+      }
+      service_providers: {
+        Row: {
+          branch_id: string | null
+          category_id: string | null
+          created_at: string
+          description: string | null
+          display_order: number
+          email: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          location: string | null
+          name: string
+          phone: string | null
+          price_from: number | null
+          service_title: string
+          updated_at: string
+          whatsapp: string | null
+        }
+        Insert: {
+          branch_id?: string | null
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          email?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          location?: string | null
+          name: string
+          phone?: string | null
+          price_from?: number | null
+          service_title: string
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Update: {
+          branch_id?: string | null
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          email?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          location?: string | null
+          name?: string
+          phone?: string | null
+          price_from?: number | null
+          service_title?: string
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_providers_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_providers_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       shop_items: {
         Row: {
