@@ -8,84 +8,85 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 30 25% 97%;
-    --foreground: 25 30% 12%;
+    /* Soft, faded bluish-white palette */
+    --background: 210 60% 98%;
+    --foreground: 215 35% 16%;
 
-    --card: 30 30% 99%;
-    --card-foreground: 25 30% 12%;
+    --card: 210 50% 100%;
+    --card-foreground: 215 35% 16%;
 
-    --popover: 30 30% 99%;
-    --popover-foreground: 25 30% 12%;
+    --popover: 210 50% 100%;
+    --popover-foreground: 215 35% 16%;
 
-    --primary: 18 76% 48%;
-    --primary-foreground: 30 30% 99%;
+    --primary: 212 72% 52%;
+    --primary-foreground: 210 60% 99%;
 
-    --secondary: 150 35% 25%;
-    --secondary-foreground: 30 30% 99%;
+    --secondary: 205 45% 92%;
+    --secondary-foreground: 215 40% 22%;
 
-    --muted: 30 20% 92%;
-    --muted-foreground: 25 15% 45%;
+    --muted: 210 40% 95%;
+    --muted-foreground: 215 16% 46%;
 
-    --accent: 42 90% 55%;
-    --accent-foreground: 25 30% 12%;
+    --accent: 195 70% 88%;
+    --accent-foreground: 215 40% 20%;
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 75% 55%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 30 20% 88%;
-    --input: 30 20% 88%;
-    --ring: 18 76% 48%;
+    --border: 210 35% 90%;
+    --input: 210 35% 90%;
+    --ring: 212 72% 52%;
 
     --radius: 0.75rem;
 
     /* Custom tokens */
-    --terracotta: 18 76% 48%;
-    --terracotta-light: 18 70% 65%;
-    --forest: 150 35% 25%;
-    --forest-light: 150 30% 40%;
-    --golden: 42 90% 55%;
-    --golden-light: 42 85% 70%;
-    --cream: 30 25% 97%;
-    --warm-brown: 25 30% 22%;
+    --terracotta: 212 72% 52%;
+    --terracotta-light: 208 70% 72%;
+    --forest: 200 45% 40%;
+    --forest-light: 198 45% 60%;
+    --golden: 195 75% 62%;
+    --golden-light: 195 70% 80%;
+    --cream: 210 60% 98%;
+    --warm-brown: 215 30% 28%;
   }
 
   .dark {
-    --background: 25 30% 8%;
-    --foreground: 30 25% 95%;
+    --background: 216 38% 9%;
+    --foreground: 210 40% 96%;
 
-    --card: 25 25% 12%;
-    --card-foreground: 30 25% 95%;
+    --card: 216 32% 13%;
+    --card-foreground: 210 40% 96%;
 
-    --popover: 25 25% 12%;
-    --popover-foreground: 30 25% 95%;
+    --popover: 216 32% 13%;
+    --popover-foreground: 210 40% 96%;
 
-    --primary: 18 76% 55%;
-    --primary-foreground: 25 30% 8%;
+    --primary: 210 85% 62%;
+    --primary-foreground: 216 38% 9%;
 
-    --secondary: 150 30% 35%;
-    --secondary-foreground: 30 25% 95%;
+    --secondary: 214 25% 24%;
+    --secondary-foreground: 210 40% 96%;
 
-    --muted: 25 20% 18%;
-    --muted-foreground: 30 15% 60%;
+    --muted: 215 25% 18%;
+    --muted-foreground: 213 18% 66%;
 
-    --accent: 42 85% 60%;
-    --accent-foreground: 25 30% 8%;
+    --accent: 198 60% 32%;
+    --accent-foreground: 210 40% 96%;
 
     --destructive: 0 62.8% 50%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 25 20% 20%;
-    --input: 25 20% 20%;
-    --ring: 18 76% 55%;
+    --border: 215 22% 22%;
+    --input: 215 22% 22%;
+    --ring: 210 85% 62%;
 
-    --terracotta: 18 76% 55%;
-    --terracotta-light: 18 70% 70%;
-    --forest: 150 30% 35%;
-    --forest-light: 150 25% 50%;
-    --golden: 42 85% 60%;
-    --golden-light: 42 80% 75%;
-    --cream: 25 30% 8%;
-    --warm-brown: 30 25% 85%;
+    --terracotta: 210 85% 62%;
+    --terracotta-light: 208 75% 74%;
+    --forest: 200 45% 45%;
+    --forest-light: 198 45% 62%;
+    --golden: 195 75% 65%;
+    --golden-light: 195 70% 80%;
+    --cream: 216 38% 9%;
+    --warm-brown: 210 30% 85%;
   }
 }
 
