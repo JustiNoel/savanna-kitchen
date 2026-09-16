@@ -318,6 +318,27 @@ const CategoriesSection = () => {
             </div>
 
             <div className="space-y-2">
+              <Label>Cover picture URL</Label>
+              <Input
+                value={form.image_url ?? ''}
+                onChange={(e) => setForm({ ...form, image_url: e.target.value })}
+                placeholder="https://images.unsplash.com/..."
+              />
+              {form.image_url ? (
+                <img
+                  src={form.image_url}
+                  alt={`${form.name || 'Category'} cover preview`}
+                  loading="lazy"
+                  className="h-28 w-full rounded-lg object-cover"
+                />
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  Shown as the banner at the top of the category page.
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
               <Label>Icon</Label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
