@@ -86,6 +86,7 @@ const emptyForm: CategoryInput = {
   display_order: 99,
   is_active: true,
   visibility: 'all',
+  image_url: '',
   branch_ids: [],
 };
 
@@ -132,6 +133,7 @@ const CategoriesSection = () => {
       display_order: cat.display_order,
       is_active: cat.is_active,
       visibility: cat.visibility,
+      image_url: cat.image_url || '',
       branch_ids: existingVisibility?.map((v: any) => v.branch_id) || [],
     });
     setDialogOpen(true);
