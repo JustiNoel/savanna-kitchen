@@ -86,6 +86,7 @@ const emptyForm: CategoryInput = {
   display_order: 99,
   is_active: true,
   visibility: 'all',
+  image_url: '',
   branch_ids: [],
 };
 
@@ -132,6 +133,7 @@ const CategoriesSection = () => {
       display_order: cat.display_order,
       is_active: cat.is_active,
       visibility: cat.visibility,
+      image_url: cat.image_url || '',
       branch_ids: existingVisibility?.map((v: any) => v.branch_id) || [],
     });
     setDialogOpen(true);
@@ -313,6 +315,27 @@ const CategoriesSection = () => {
                 placeholder="Short subtitle shown to customers"
                 rows={2}
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Cover picture URL</Label>
+              <Input
+                value={form.image_url ?? ''}
+                onChange={(e) => setForm({ ...form, image_url: e.target.value })}
+                placeholder="https://images.unsplash.com/..."
+              />
+              {form.image_url ? (
+                <img
+                  src={form.image_url}
+                  alt={`${form.name || 'Category'} cover preview`}
+                  loading="lazy"
+                  className="h-28 w-full rounded-lg object-cover"
+                />
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  Shown as the banner at the top of the category page.
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
