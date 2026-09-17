@@ -18,6 +18,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
+import CategoryPayoutSummary from '@/components/admin/CategoryPayoutSummary';
 import {
   useFinancialTransactions,
   useInvoices,

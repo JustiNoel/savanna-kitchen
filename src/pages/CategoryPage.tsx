@@ -125,6 +125,24 @@ const CategoryPage = () => {
           background: `linear-gradient(135deg, ${category.color}25, ${category.color}05)`,
         }}
       >
+        {category.image_url && (
+          <>
+            <img
+              src={category.image_url}
+              alt={`${category.name} at Grabbys`}
+              loading="lazy"
+              className="absolute inset-0 h-full w-full object-cover opacity-30"
+            />
+            <div
+              className="absolute inset-0"
+              style={{
+                background: `linear-gradient(135deg, ${category.color}55, hsl(var(--background)/0.85))`,
+              }}
+              aria-hidden
+            />
+          </>
+        )}
+        <div className="relative">
         <div className="container mx-auto px-4">
           <Link to="/">
             <Button variant="ghost" size="sm" className="mb-4">
