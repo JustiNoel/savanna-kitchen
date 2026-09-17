@@ -300,7 +300,11 @@ const CategoryPage = () => {
           </div>
         )}
 
-        <ServiceProvidersSection categoryId={category.id} color={category.color} />
+        <ServiceProvidersSection
+          categoryId={category.id}
+          color={category.color}
+          showEmptyState={category.slug === 'beauty-lifestyle'}
+        />
       </main>
 
       <FloatingCart />
