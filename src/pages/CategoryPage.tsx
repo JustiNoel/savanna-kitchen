@@ -13,6 +13,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
 import { useCategories } from '@/hooks/useCategories';
+import ServiceProvidersSection from '@/components/ServiceProvidersSection';
 import { useUserBranch } from '@/hooks/useUserBranch';
 import { useCart } from '@/context/CartContext';
 import { toast } from 'sonner';

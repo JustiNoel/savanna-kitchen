@@ -34,6 +34,9 @@ import BranchesSection from '@/components/admin/BranchesSection';
 import BranchManagersSection from '@/components/admin/BranchManagersSection';
 import CategoriesSection from '@/components/admin/CategoriesSection';
 import MaintenanceToggleCard from '@/components/admin/MaintenanceToggleCard';
+import CategoryPaymentsSection from '@/components/admin/CategoryPaymentsSection';
+import ServiceProvidersAdminSection from '@/components/admin/ServiceProvidersAdminSection';
+import AnnouncementSection from '@/components/admin/AnnouncementSection';
 import { usePromoCodes, useCreatePromoCode, useTogglePromoCode, useDeletePromoCode } from '@/hooks/usePromoCodes';
 import { logAuditEvent } from '@/hooks/useAuditLog';
 
@@ -1289,6 +1292,18 @@ const Admin = () => {
                   <TabsTrigger value="security" className="flex items-center gap-1 px-2 py-1.5 text-xs sm:text-sm sm:px-3">
                     <Lock className="h-3 w-3 sm:h-4 sm:w-4" />
                     <span className="hidden xs:inline sm:inline">Security</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="category-payments" className="flex items-center gap-1 px-2 py-1.5 text-xs sm:text-sm sm:px-3">
+                    <Wallet className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden xs:inline sm:inline">Payments</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="services" className="flex items-center gap-1 px-2 py-1.5 text-xs sm:text-sm sm:px-3">
+                    <UserRound className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden xs:inline sm:inline">Services</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="announcements" className="flex items-center gap-1 px-2 py-1.5 text-xs sm:text-sm sm:px-3">
+                    <Megaphone className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden xs:inline sm:inline">Announce</span>
                   </TabsTrigger>
                   <TabsTrigger value="settings" className="flex items-center gap-1 px-2 py-1.5 text-xs sm:text-sm sm:px-3">
                     <Wrench className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -2601,6 +2616,15 @@ const Admin = () => {
               </TabsContent>
               <TabsContent value="security" className="space-y-4">
                 <SecuritySection />
+              </TabsContent>
+              <TabsContent value="category-payments" className="space-y-4">
+                <CategoryPaymentsSection />
+              </TabsContent>
+              <TabsContent value="services" className="space-y-4">
+                <ServiceProvidersAdminSection />
+              </TabsContent>
+              <TabsContent value="announcements" className="space-y-4">
+                <AnnouncementSection />
               </TabsContent>
               <TabsContent value="settings" className="space-y-4">
                 <MaintenanceToggleCard />
