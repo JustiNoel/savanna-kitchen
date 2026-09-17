@@ -8,6 +8,8 @@ import { useServiceProviders } from '@/hooks/useServiceProviders';
 interface ServiceProvidersSectionProps {
   categoryId: string;
   color: string;
+  /** Show the "no providers yet" card instead of hiding the section entirely. */
+  showEmptyState?: boolean;
 }
 
 const digitsOnly = (value: string) => value.replace(/[^0-9]/g, '');
