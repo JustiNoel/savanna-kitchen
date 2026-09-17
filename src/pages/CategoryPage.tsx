@@ -171,6 +171,7 @@ const CategoryPage = () => {
               )}
             </div>
           </motion.div>
+          </div>
         </div>
       </section>
 
