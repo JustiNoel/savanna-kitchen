@@ -299,6 +299,8 @@ const CategoryPage = () => {
             })}
           </div>
         )}
+
+        <ServiceProvidersSection categoryId={category.id} color={category.color} />
       </main>
 
       <FloatingCart />
