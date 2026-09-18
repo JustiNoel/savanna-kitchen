@@ -2,7 +2,8 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+import { RESEND_KEY, resolveFrom } from "../_shared/resend-sender.ts";
+const resend = new Resend(RESEND_KEY);
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -264,7 +265,7 @@ const handler = async (req: Request): Promise<Response> => {
 
       // Send to rider
       const riderResponse = await resend.emails.send({
-        from: "Grabbys <onboarding@resend.dev>",
+        from: await resolveFrom(),
         to: [riderEmail],
         subject: customerSubject,
         html: customerHtml,
@@ -273,7 +274,7 @@ const handler = async (req: Request): Promise<Response> => {
 
       // Send to admin
       const adminResponse = await resend.emails.send({
-        from: "Grabbys <onboarding@resend.dev>",
+        from: await resolveFrom(),
         to: [ADMIN_EMAIL],
         subject: `🚴 Rider Assigned: Order #${orderId.slice(0, 8)}`,
         html: adminHtml,
@@ -371,7 +372,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send to customer
     const customerResponse = await resend.emails.send({
-      from: "Grabbys <onboarding@resend.dev>",
+      from: await resolveFrom(),
       to: [customerEmail],
       subject: customerSubject,
       html: customerHtml,
@@ -380,7 +381,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send to admin
     const adminResponse = await resend.emails.send({
-      from: "Grabbys <onboarding@resend.dev>",
+      from: await resolveFrom(),
       to: [ADMIN_EMAIL],
       subject: type === "order" 
         ? `🛒 New Order from ${customerName}` 
