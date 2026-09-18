@@ -154,21 +154,44 @@ serve(async (req: Request): Promise<Response> => {
       );
     }
 
+    if (!RESEND_KEY) {
+      return new Response(
+        JSON.stringify({
+          error:
+            "Email service key is missing. Add the Resend API key before sending.",
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
+    }
+
+    const from = await resolveFrom();
+
     let sent = 0;
     let failed = 0;
+    let lastError: string | null = null;
 
     for (let i = 0; i < recipients.length; i += 25) {
       const batch = recipients.slice(i, i + 25);
       const results = await Promise.allSettled(
         batch.map((to) =>
-          resend.emails.send({ from: FROM, to: [to], subject: title, html }),
+          resend.emails.send({ from, to: [to], subject: title, html }),
         ),
       );
       for (const r of results) {
-        if (r.status === "fulfilled" && !(r.value as { error?: unknown }).error) {
-          sent += 1;
-        } else {
+        if (r.status === "rejected") {
           failed += 1;
+          lastError = String(r.reason?.message ?? r.reason ?? "Send failed");
+          continue;
+        }
+        const value = r.value as { error?: { message?: string } | null };
+        if (value?.error) {
+          failed += 1;
+          lastError = value.error.message ?? "Send rejected by email provider";
+        } else {
+          sent += 1;
         }
       }
       if (i + 25 < recipients.length) {
@@ -176,8 +199,33 @@ serve(async (req: Request): Promise<Response> => {
       }
     }
 
+    console.log("announcement result", { from, sent, failed, lastError });
+
+    if (sent === 0) {
+      return new Response(
+        JSON.stringify({
+          error: lastError ?? "No emails could be delivered",
+          from,
+          total: recipients.length,
+          sent,
+          failed,
+        }),
+        {
+          status: 502,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
+    }
+
     return new Response(
-      JSON.stringify({ success: true, total: recipients.length, sent, failed }),
+      JSON.stringify({
+        success: true,
+        from,
+        total: recipients.length,
+        sent,
+        failed,
+        lastError,
+      }),
       {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
