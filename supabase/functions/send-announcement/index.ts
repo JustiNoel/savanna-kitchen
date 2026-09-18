@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
+import { RESEND_KEY, resolveFrom } from "../_shared/resend-sender.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,11 +9,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-const resend = new Resend(
-  Deno.env.get("RESEND_API_KEY") ?? Deno.env.get("RESEND_DOMAIN_KEY") ?? "",
-);
-
-const FROM = Deno.env.get("RESEND_FROM") ?? "Grabbys <onboarding@resend.dev>";
+const resend = new Resend(RESEND_KEY);
 const SITE = "https://grabbys-kitchen.lovable.app";
 
 const escapeHtml = (value: string) =>
