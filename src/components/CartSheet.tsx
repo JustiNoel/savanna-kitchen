@@ -17,6 +17,7 @@ import CategoryPaymentInstructions from './CategoryPaymentInstructions';
 import PromoCodeInput from './PromoCodeInput';
 import PostOrderSurvey from './PostOrderSurvey';
 import { useUserBranch } from '@/hooks/useUserBranch';
+import { useCategories } from '@/hooks/useCategories';
 
 interface DeliveryLocation {
   address: string;
@@ -51,6 +52,12 @@ const CartSheet = () => {
 
   const DELIVERY_FEE = 20;
   const totalWithFee = totalPrice + DELIVERY_FEE - promoDiscount;
+
+  // Which category the cart belongs to — decides which payment account is shown.
+  const { data: allCategories } = useCategories({ onlyActive: true });
+  const rawCategory = (items[0]?.category || '').toLowerCase().trim();
+  const knownSlug = allCategories?.some((c) => c.slug === rawCategory);
+  const cartCategorySlug = knownSlug ? rawCategory : 'food';
 
   const formatPrice = (price: number) => `KSh ${price.toLocaleString()}`;
 
