@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 import { getImageForDish } from '@/lib/foodImages';
 import { supabase } from '@/integrations/supabase/client';
 import LocationPicker from './LocationPicker';
-import PaymentSection from './PaymentSection';
+import CategoryPaymentInstructions from './CategoryPaymentInstructions';
 import PromoCodeInput from './PromoCodeInput';
 import PostOrderSurvey from './PostOrderSurvey';
 import { useUserBranch } from '@/hooks/useUserBranch';
@@ -367,11 +367,11 @@ const CartSheet = () => {
               <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${paymentConfirmed ? 'bg-green-500 text-white' : 'bg-primary text-primary-foreground'}`}>3</div>
               <span className="font-medium">Payment</span>
             </div>
-            <PaymentSection
+            <CategoryPaymentInstructions
+              categorySlug={cartCategorySlug}
               totalAmount={totalWithFee}
               onPaymentConfirmed={handlePaymentConfirmed}
               isConfirmed={paymentConfirmed}
-              phoneNumber={deliveryLocation?.phoneNumber}
             />
           </div>
         )}
