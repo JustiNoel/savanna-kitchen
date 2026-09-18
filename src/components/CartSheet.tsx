@@ -147,13 +147,13 @@ const CartSheet = () => {
           branch_id: branchId,
           total_amount: totalWithFee,
           status: 'pending',
-          payment_status: 'paid',
-          payment_method: 'paystack',
+          payment_status: 'pending',
+          payment_method: 'mpesa',
           delivery_address: deliveryLocation.address,
           delivery_latitude: deliveryLocation.latitude,
           delivery_longitude: deliveryLocation.longitude,
           delivery_instructions: deliveryLocation.instructions || null,
-          notes: `Paystack: ${code}${deliveryLocation.phoneNumber ? ` | Phone: ${deliveryLocation.phoneNumber}` : ''}${promoNote}`,
+          notes: `M-Pesa: ${code} | Category: ${cartCategorySlug}${deliveryLocation.phoneNumber ? ` | Phone: ${deliveryLocation.phoneNumber}` : ''}${promoNote}`,
           order_type: 'delivery',
         })
         .select()
