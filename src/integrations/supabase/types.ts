@@ -833,6 +833,7 @@ export type Database = {
           delivery_latitude: number | null
           delivery_longitude: number | null
           id: string
+          items_total: number
           notes: string | null
           order_type: string | null
           payment_method: string | null
@@ -854,6 +855,7 @@ export type Database = {
           delivery_latitude?: number | null
           delivery_longitude?: number | null
           id?: string
+          items_total?: number
           notes?: string | null
           order_type?: string | null
           payment_method?: string | null
@@ -875,6 +877,7 @@ export type Database = {
           delivery_latitude?: number | null
           delivery_longitude?: number | null
           id?: string
+          items_total?: number
           notes?: string | null
           order_type?: string | null
           payment_method?: string | null
