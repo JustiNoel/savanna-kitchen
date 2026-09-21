@@ -11,7 +11,6 @@ import RefreshAlert from '@/components/RefreshAlert';
 import OrderTracker from '@/components/OrderTracker';
 import DeliveryTracker from '@/components/DeliveryTracker';
 import BackButton from '@/components/BackButton';
-import MascotGuide from '@/components/MascotGuide';
 import SEO from '@/components/SEO';
 import bgFood from '@/assets/bg-food.jpg';
 
@@ -33,7 +32,6 @@ const Food = () => {
       <RefreshAlert />
       <AIHelpChat />
       <FloatingCart />
-      <MascotGuide />
       <main className="pt-20">
         <h1 className="sr-only">Grabbys Food Menu & Table Reservations</h1>
         <div className="container mx-auto px-4 py-4">

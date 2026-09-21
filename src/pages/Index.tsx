@@ -4,7 +4,6 @@ import WelcomeGreeting from '@/components/WelcomeGreeting';
 import WelcomePopup from '@/components/WelcomePopup';
 import AIHelpChat from '@/components/AIHelpChat';
 import FloatingCart from '@/components/FloatingCart';
-import MascotGuide from '@/components/MascotGuide';
 import PushNotificationPrompt from '@/components/PushNotificationPrompt';
 import RefreshAlert from '@/components/RefreshAlert';
 import BranchSelectModal from '@/components/BranchSelectModal';
@@ -47,7 +46,6 @@ const Index = () => {
       <BranchSelectModal />
       <AIHelpChat />
       <FloatingCart />
-      <MascotGuide />
       <PushNotificationPrompt />
       <RefreshAlert />
       <main className="flex-1">
