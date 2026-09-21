@@ -49,6 +49,7 @@ const Index = () => {
       <FloatingCart />
       <PushNotificationPrompt />
       <RefreshAlert />
+      <InstallAppPrompt />
       <main className="flex-1">
         <Hero />
       </main>
