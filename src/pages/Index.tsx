@@ -6,6 +6,7 @@ import AIHelpChat from '@/components/AIHelpChat';
 import FloatingCart from '@/components/FloatingCart';
 import PushNotificationPrompt from '@/components/PushNotificationPrompt';
 import RefreshAlert from '@/components/RefreshAlert';
+import InstallAppPrompt from '@/components/InstallAppPrompt';
 import BranchSelectModal from '@/components/BranchSelectModal';
 import Footer from '@/components/Footer';
 import SEO from '@/components/SEO';
