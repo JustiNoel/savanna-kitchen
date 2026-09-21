@@ -1198,24 +1198,35 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
+      <header className="sticky top-0 z-30 border-b border-border bg-gradient-to-r from-primary/10 via-card to-card/80 backdrop-blur">
+        <div className="container mx-auto flex items-center justify-between gap-3 px-4 py-4">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" aria-label="Back to the site" onClick={() => navigate('/')}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <div>
-              <h1 className="font-display text-xl font-bold">Admin Dashboard</h1>
-              <p className="text-sm text-muted-foreground">Manage Grabbys</p>
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15">
+              <Shield className="h-5 w-5 text-primary" />
+            </div>
+            <div className="min-w-0">
+              <h1 className="font-display text-lg font-bold sm:text-xl">Admin Dashboard</h1>
+              <p className="truncate text-xs text-muted-foreground sm:text-sm">
+                Signed in as {user?.email}
+              </p>
             </div>
           </div>
+          <Badge
+            variant="secondary"
+            className="hidden shrink-0 rounded-full px-3 py-1 text-xs sm:inline-flex"
+          >
+            {user?.email === 'justinoel254@gmail.com' ? 'Super Admin' : 'Admin'}
+          </Badge>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-6 sm:py-8">
         <Tabs defaultValue="menu" className="space-y-6">
-          <div className="overflow-x-auto -mx-4 px-4 pb-2">
-            <TabsList className="inline-flex min-w-max gap-1 p-1">
+          <div className="-mx-4 overflow-x-auto px-4 pb-2">
+            <TabsList className="inline-flex min-w-max gap-1 rounded-xl p-1 shadow-sm">
               <TabsTrigger value="menu" className="flex items-center gap-1 px-2 py-1.5 text-xs sm:text-sm sm:px-3">
                 <UtensilsCrossed className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span className="hidden xs:inline sm:inline">Food</span>

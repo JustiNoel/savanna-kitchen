@@ -9,7 +9,6 @@ import RefreshAlert from '@/components/RefreshAlert';
 import OrderTracker from '@/components/OrderTracker';
 import DeliveryTracker from '@/components/DeliveryTracker';
 import BackButton from '@/components/BackButton';
-import MascotGuide from '@/components/MascotGuide';
 import SEO from '@/components/SEO';
 import bgGrocery from '@/assets/bg-grocery.jpg';
 
@@ -31,7 +30,6 @@ const Grocery = () => {
       <RefreshAlert />
       <AIHelpChat />
       <FloatingCart />
-      <MascotGuide />
       <main className="pt-20">
         <h1 className="sr-only">Fresh Groceries Delivered in Maseno</h1>
         <div className="container mx-auto px-4 py-4">

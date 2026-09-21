@@ -4,9 +4,9 @@ import WelcomeGreeting from '@/components/WelcomeGreeting';
 import WelcomePopup from '@/components/WelcomePopup';
 import AIHelpChat from '@/components/AIHelpChat';
 import FloatingCart from '@/components/FloatingCart';
-import MascotGuide from '@/components/MascotGuide';
 import PushNotificationPrompt from '@/components/PushNotificationPrompt';
 import RefreshAlert from '@/components/RefreshAlert';
+import InstallAppPrompt from '@/components/InstallAppPrompt';
 import BranchSelectModal from '@/components/BranchSelectModal';
 import Footer from '@/components/Footer';
 import SEO from '@/components/SEO';
@@ -47,9 +47,9 @@ const Index = () => {
       <BranchSelectModal />
       <AIHelpChat />
       <FloatingCart />
-      <MascotGuide />
       <PushNotificationPrompt />
       <RefreshAlert />
+      <InstallAppPrompt />
       <main className="flex-1">
         <Hero />
       </main>
