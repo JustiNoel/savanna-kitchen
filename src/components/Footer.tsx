@@ -15,7 +15,7 @@ const Footer = () => {
               </h3>
             </div>
             <p className="text-background/70 text-sm leading-relaxed">
-              Your one-stop destination for delicious food, fresh groceries, everyday essentials, and premium spirits. Delivered to your doorstep! 🚀
+              Your one-stop destination for delicious food, fresh groceries, everyday essentials, and premium spirits. Delivered to your doorstep! 
             </p>
           </div>
 
@@ -29,20 +29,7 @@ const Footer = () => {
               </li>
               <li className="flex items-center gap-3 text-background/70 text-sm">
                 <Phone className="h-4 w-4 text-primary flex-shrink-0" />
-                <a href="tel:+254752140592" className="hover:text-primary transition-colors">
-                  +254 752 140 592
-                </a>
-              </li>
-              <li className="flex items-center gap-3 text-background/70 text-sm">
-                <MessageCircle className="h-4 w-4 text-green-400 flex-shrink-0" />
-                <a
-                  href="https://wa.me/254752140592"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-green-400 transition-colors"
-                >
-                  WhatsApp: +254 752 140 592
-                </a>
+                <span>+254 752 140 592</span>
               </li>
               <li className="flex items-center gap-3 text-background/70 text-sm">
                 <Mail className="h-4 w-4 text-primary flex-shrink-0" />
@@ -61,14 +48,14 @@ const Footer = () => {
                 <Clock className="h-4 w-4 text-primary flex-shrink-0" />
                 <div>
                   <p className="font-medium text-background">Mon - Fri</p>
-                  <p>7:00 AM - 10:00 PM</p>
+                  <p>7:00 AM - 9:00 PM</p>
                 </div>
               </li>
               <li className="flex items-center gap-3 text-background/70 text-sm">
                 <Clock className="h-4 w-4 text-primary flex-shrink-0" />
                 <div>
                   <p className="font-medium text-background">Sat - Sun</p>
-                  <p>8:00 AM - 11:00 PM</p>
+                  <p>8:00 AM - 10:00 PM</p>
                 </div>
               </li>
             </ul>
@@ -139,22 +126,22 @@ const Footer = () => {
             </a>
             <ul className="space-y-2">
               <li>
-                <a href="#menu" className="text-background/70 hover:text-primary transition-colors text-sm">
+                <a href="menu" className="text-background/70 hover:text-primary transition-colors text-sm">
                   🍽️ Food
                 </a>
               </li>
               <li>
-                <a href="#groceries" className="text-background/70 hover:text-primary transition-colors text-sm">
+                <a href="groceries" className="text-background/70 hover:text-primary transition-colors text-sm">
                   🥕 Groceries
                 </a>
               </li>
               <li>
-                <a href="#shop" className="text-background/70 hover:text-primary transition-colors text-sm">
+                <a href="shop" className="text-background/70 hover:text-primary transition-colors text-sm">
                   🏪 Shop
                 </a>
               </li>
               <li>
-                <a href="#spirits" className="text-background/70 hover:text-primary transition-colors text-sm">
+                <a href="spirits" className="text-background/70 hover:text-primary transition-colors text-sm">
                   🍾 Spirits
                 </a>
               </li>
@@ -169,7 +156,7 @@ const Footer = () => {
           </p>
           <div className="flex items-center gap-4">
             <span className="text-2xl">🇰🇪</span>
-            <span className="text-background/50 text-sm">Made with ❤️ in Kenya</span>
+            <span className="text-background/50 text-sm">N.J</span>
           </div>
         </div>
       </div>

@@ -99,7 +99,7 @@ const FoodCard = ({ item }: FoodCardProps) => {
               {/* Text overlay */}
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background/90 to-transparent p-4">
                 <p className="text-sm font-medium text-primary animate-fade-in">
-                  ✨ Freshly prepared for you
+                  Freshly prepared for you
                 </p>
               </div>
             </div>
