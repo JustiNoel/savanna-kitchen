@@ -149,6 +149,7 @@ const CartSheet = () => {
           status: 'pending',
           payment_status: 'pending',
           payment_method: 'mpesa',
+          payment_reference: code,
           delivery_address: deliveryLocation.address,
           delivery_latitude: deliveryLocation.latitude,
           delivery_longitude: deliveryLocation.longitude,
