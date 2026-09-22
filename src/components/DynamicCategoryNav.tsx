@@ -89,6 +89,16 @@ const DynamicCategoryNav = () => {
                   background: `linear-gradient(135deg, ${cat.color}15, ${cat.color}05)`,
                 }}
               >
+                {cat.image_url && (
+                  <div className="h-28 w-full overflow-hidden">
+                    <img
+                      src={cat.image_url}
+                      alt={`${cat.name} category`}
+                      loading="lazy"
+                      className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
+                    />
+                  </div>
+                )}
                 <CardContent className="p-5 text-center space-y-3">
                   <div
                     className="mx-auto h-16 w-16 rounded-2xl flex items-center justify-center shadow-md"

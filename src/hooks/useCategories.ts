@@ -14,6 +14,7 @@ export interface Category {
   is_protected: boolean;
   is_active: boolean;
   visibility: 'all' | 'specific';
+  image_url: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -27,6 +28,7 @@ export interface CategoryInput {
   display_order: number;
   is_active: boolean;
   visibility: 'all' | 'specific';
+  image_url?: string | null;
   branch_ids?: string[];
 }
 

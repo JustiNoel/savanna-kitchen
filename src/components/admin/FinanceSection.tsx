@@ -18,6 +18,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
+import CategoryPayoutSummary from '@/components/admin/CategoryPayoutSummary';
 import {
   useFinancialTransactions,
   useInvoices,
@@ -821,6 +822,9 @@ const FinanceSection = () => {
         {/* Reports Tab */}
         <TabsContent value="reports" className="space-y-4">
           <h3 className="text-lg font-semibold">Financial Reports</h3>
+
+          <CategoryPayoutSummary />
+          
           
           <div className="grid gap-4 md:grid-cols-2">
             <Card>

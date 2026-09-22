@@ -295,7 +295,7 @@ const Rider = () => {
   // Update order status mutation
   const updateStatus = useMutation({
     mutationFn: async ({ orderId, status }: { orderId: string; status: string }) => {
-      const updateData: Record<string, any> = { status };
+      const updateData: { status: string; picked_up_at?: string; delivered_at?: string } = { status };
       
       if (status === 'delivering') {
         updateData.picked_up_at = new Date().toISOString();

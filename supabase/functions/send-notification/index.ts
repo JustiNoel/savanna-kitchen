@@ -2,7 +2,8 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+import { RESEND_KEY, resolveFrom } from "../_shared/resend-sender.ts";
+const resend = new Resend(RESEND_KEY);
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -113,6 +114,25 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    const callerId = claimsData.claims.sub as string;
+    const callerEmail = (claimsData.claims.email as string | undefined) ?? "";
+
+    // Trusted server-side client used for ownership checks and data lookups
+    const admin = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+
+    const { data: roleRow } = await admin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", callerId)
+      .eq("role", "admin")
+      .maybeSingle();
+    const isAdmin = !!roleRow;
+
+    const forbidden = () => new Response(
+      JSON.stringify({ error: "Forbidden" }),
+      { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+
     const rawBody: NotificationRequest = await req.json();
 
     // Validate required fields
@@ -125,41 +145,128 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!rawBody.customerEmail || !emailRegex.test(rawBody.customerEmail) || rawBody.customerEmail.length > 255) {
+    const type = rawBody.type;
+    const details = rawBody.details || {};
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+    // Values that are always derived from the database, never from the request body
+    let trustedEmail = "";
+    let trustedName = "";
+    let trustedRiderEmail = "";
+    let dbOrder: Record<string, unknown> | null = null;
+    let dbItems: Array<{ name: string; quantity: number; price: number }> = [];
+
+    if (type === "order" || type === "order_update" || type === "rider_assignment") {
+      const requestedOrderId = typeof details.orderId === "string" ? details.orderId : "";
+      if (!uuidRegex.test(requestedOrderId)) {
+        return new Response(
+          JSON.stringify({ error: "Valid orderId is required" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const { data: order } = await admin
+        .from("orders")
+        .select("id, user_id, rider_id, total_amount, delivery_address, delivery_latitude, delivery_longitude, notes, status, order_items(item_name, quantity, unit_price)")
+        .eq("id", requestedOrderId)
+        .maybeSingle();
+
+      if (!order) return forbidden();
+
+      let allowed = isAdmin || order.user_id === callerId;
+      if (!allowed && order.rider_id) {
+        const { data: rider } = await admin
+          .from("riders")
+          .select("id")
+          .eq("id", order.rider_id)
+          .eq("user_id", callerId)
+          .maybeSingle();
+        allowed = !!rider;
+      }
+      if (!allowed) return forbidden();
+
+      // Rider assignment mails expose rider + customer contact data: admin only
+      if (type === "rider_assignment" && !isAdmin) return forbidden();
+
+      const { data: customerProfile } = await admin
+        .from("profiles")
+        .select("email, full_name")
+        .eq("user_id", order.user_id)
+        .maybeSingle();
+
+      trustedEmail = customerProfile?.email ?? "";
+      trustedName = customerProfile?.full_name ?? "Customer";
+      dbOrder = order as Record<string, unknown>;
+      dbItems = ((order as any).order_items ?? []).slice(0, 100).map((i: any) => ({
+        name: sanitizeStr(i.item_name, 100),
+        quantity: Number(i.quantity) || 1,
+        price: Number(i.unit_price) || 0,
+      }));
+
+      if (type === "rider_assignment") {
+        const { data: rider } = await admin
+          .from("riders")
+          .select("user_id")
+          .eq("id", order.rider_id)
+          .maybeSingle();
+        if (rider?.user_id) {
+          const { data: riderProfile } = await admin
+            .from("profiles")
+            .select("email, full_name")
+            .eq("user_id", rider.user_id)
+            .maybeSingle();
+          trustedRiderEmail = riderProfile?.email ?? "";
+        }
+      }
+    } else if (type === "reservation") {
+      // Customers may only mail themselves their own booking confirmation
+      trustedEmail = callerEmail;
+      trustedName = sanitizeStr(rawBody.customerName, 100) || "Customer";
+    } else {
+      // reservation_update is an admin-only action
+      if (!isAdmin) return forbidden();
+      const requested = typeof rawBody.customerEmail === "string" ? rawBody.customerEmail.trim() : "";
+      const { data: reservation } = await admin
+        .from("reservations")
+        .select("guest_email, guest_name")
+        .eq("guest_email", requested)
+        .maybeSingle();
+      if (!reservation) return forbidden();
+      trustedEmail = reservation.guest_email;
+      trustedName = reservation.guest_name ?? "Guest";
+    }
+
+    if (!trustedEmail || !emailRegex.test(trustedEmail)) {
       return new Response(
-        JSON.stringify({ error: "Valid customer email is required" }),
+        JSON.stringify({ error: "No valid recipient on record" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Sanitize all user-provided strings
-    const type = rawBody.type;
-    const customerEmail = rawBody.customerEmail.trim().slice(0, 255);
-    const customerName = sanitizeStr(rawBody.customerName, 100) || "Customer";
-    const details = rawBody.details || {};
-    const orderId = sanitizeStr(details.orderId, 50);
+    // Sanitize all remaining strings
+    const customerEmail = trustedEmail.slice(0, 255);
+    const customerName = sanitizeStr(trustedName, 100) || "Customer";
+    const orderId = dbOrder ? String(dbOrder.id) : "";
     const transactionCode = sanitizeStr(details.transactionCode, 50);
-    const deliveryAddress = sanitizeStr(details.deliveryAddress, 500);
-    const deliveryPhone = sanitizeStr(details.deliveryPhone, 20);
+    const deliveryAddress = dbOrder
+      ? sanitizeStr((dbOrder.delivery_address as string) ?? "", 500)
+      : "";
+    const notesPhone = dbOrder ? String((dbOrder.notes as string) ?? "").match(/Phone:\s*(\+?\d+)/)?.[1] ?? "" : "";
+    const deliveryPhone = sanitizeStr(notesPhone, 20);
     const specialRequests = sanitizeStr(details.specialRequests, 500);
-    const status = sanitizeStr(details.status, 30);
+    const status = dbOrder ? sanitizeStr((dbOrder.status as string) ?? "", 30) : sanitizeStr(details.status, 30);
     const riderName = sanitizeStr(details.riderName, 100);
-    const riderEmail = details.riderEmail && emailRegex.test(details.riderEmail) ? details.riderEmail.trim().slice(0, 255) : "";
+    const riderEmail = trustedRiderEmail && emailRegex.test(trustedRiderEmail) ? trustedRiderEmail.slice(0, 255) : "";
     const reservationDate = sanitizeStr(details.reservationDate, 30);
     const reservationTime = sanitizeStr(details.reservationTime, 20);
     const numberOfGuests = typeof details.numberOfGuests === "number" ? Math.min(Math.max(1, Math.floor(details.numberOfGuests)), 100) : 0;
-    const totalAmount = typeof details.totalAmount === "number" ? details.totalAmount : 0;
-    const deliveryLatitude = typeof details.deliveryLatitude === "number" ? details.deliveryLatitude : null;
-    const deliveryLongitude = typeof details.deliveryLongitude === "number" ? details.deliveryLongitude : null;
+    const totalAmount = dbOrder ? Number(dbOrder.total_amount) || 0 : 0;
+    const deliveryLatitude = dbOrder && typeof dbOrder.delivery_latitude === "number" ? dbOrder.delivery_latitude as number : null;
+    const deliveryLongitude = dbOrder && typeof dbOrder.delivery_longitude === "number" ? dbOrder.delivery_longitude as number : null;
 
-    // Sanitize items
-    const items = Array.isArray(details.items) ? details.items.slice(0, 100).map(item => ({
-      name: sanitizeStr(item.name, 100),
-      quantity: typeof item.quantity === "number" ? Math.min(Math.max(1, Math.floor(item.quantity)), 1000) : 1,
-      price: typeof item.price === "number" ? item.price : 0,
-    })) : [];
+    const items = dbItems;
 
-    console.log(`Sending ${type} notification to ${customerEmail} and admin`);
+    console.log(`Sending ${type} notification to customer and admin`);
 
     let customerSubject: string;
     let customerHtml: string;
@@ -264,7 +371,7 @@ const handler = async (req: Request): Promise<Response> => {
 
       // Send to rider
       const riderResponse = await resend.emails.send({
-        from: "Grabbys <onboarding@resend.dev>",
+        from: await resolveFrom(),
         to: [riderEmail],
         subject: customerSubject,
         html: customerHtml,
@@ -273,7 +380,7 @@ const handler = async (req: Request): Promise<Response> => {
 
       // Send to admin
       const adminResponse = await resend.emails.send({
-        from: "Grabbys <onboarding@resend.dev>",
+        from: await resolveFrom(),
         to: [ADMIN_EMAIL],
         subject: `🚴 Rider Assigned: Order #${orderId.slice(0, 8)}`,
         html: adminHtml,
@@ -371,7 +478,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send to customer
     const customerResponse = await resend.emails.send({
-      from: "Grabbys <onboarding@resend.dev>",
+      from: await resolveFrom(),
       to: [customerEmail],
       subject: customerSubject,
       html: customerHtml,
@@ -380,7 +487,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send to admin
     const adminResponse = await resend.emails.send({
-      from: "Grabbys <onboarding@resend.dev>",
+      from: await resolveFrom(),
       to: [ADMIN_EMAIL],
       subject: type === "order" 
         ? `🛒 New Order from ${customerName}` 

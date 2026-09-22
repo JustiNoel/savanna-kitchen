@@ -13,10 +13,11 @@ import { toast } from 'sonner';
 import { getImageForDish } from '@/lib/foodImages';
 import { supabase } from '@/integrations/supabase/client';
 import LocationPicker from './LocationPicker';
-import PaymentSection from './PaymentSection';
+import CategoryPaymentInstructions from './CategoryPaymentInstructions';
 import PromoCodeInput from './PromoCodeInput';
 import PostOrderSurvey from './PostOrderSurvey';
 import { useUserBranch } from '@/hooks/useUserBranch';
+import { useCategories } from '@/hooks/useCategories';
 
 interface DeliveryLocation {
   address: string;
@@ -51,6 +52,12 @@ const CartSheet = () => {
 
   const DELIVERY_FEE = 20;
   const totalWithFee = totalPrice + DELIVERY_FEE - promoDiscount;
+
+  // Which category the cart belongs to — decides which payment account is shown.
+  const { data: allCategories } = useCategories({ onlyActive: true });
+  const rawCategory = (items[0]?.category || '').toLowerCase().trim();
+  const knownSlug = allCategories?.some((c) => c.slug === rawCategory);
+  const cartCategorySlug = knownSlug ? rawCategory : 'food';
 
   const formatPrice = (price: number) => `KSh ${price.toLocaleString()}`;
 
@@ -140,13 +147,14 @@ const CartSheet = () => {
           branch_id: branchId,
           total_amount: totalWithFee,
           status: 'pending',
-          payment_status: 'paid',
-          payment_method: 'paystack',
+          payment_status: 'pending',
+          payment_method: 'mpesa',
+          payment_reference: code,
           delivery_address: deliveryLocation.address,
           delivery_latitude: deliveryLocation.latitude,
           delivery_longitude: deliveryLocation.longitude,
           delivery_instructions: deliveryLocation.instructions || null,
-          notes: `Paystack: ${code}${deliveryLocation.phoneNumber ? ` | Phone: ${deliveryLocation.phoneNumber}` : ''}${promoNote}`,
+          notes: `M-Pesa: ${code} | Category: ${cartCategorySlug}${deliveryLocation.phoneNumber ? ` | Phone: ${deliveryLocation.phoneNumber}` : ''}${promoNote}`,
           order_type: 'delivery',
         })
         .select()
@@ -156,7 +164,14 @@ const CartSheet = () => {
       orderId = order.id;
     } catch (error) {
       console.error('Order creation error:', error);
-      toast.error('Failed to place order. Please try again.');
+      const message = error instanceof Error ? error.message : '';
+      if (message.includes('payment_reference') || message.includes('duplicate key')) {
+        toast.error('This M-Pesa code has already been used for another order.');
+      } else if (message.includes('confirmation code')) {
+        toast.error('Enter a valid M-Pesa confirmation code from your SMS.');
+      } else {
+        toast.error('Failed to place order. Please try again.');
+      }
       setPaymentConfirmed(false);
       setIsProcessing(false);
       return;
@@ -367,11 +382,11 @@ const CartSheet = () => {
               <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${paymentConfirmed ? 'bg-green-500 text-white' : 'bg-primary text-primary-foreground'}`}>3</div>
               <span className="font-medium">Payment</span>
             </div>
-            <PaymentSection
+            <CategoryPaymentInstructions
+              categorySlug={cartCategorySlug}
               totalAmount={totalWithFee}
               onPaymentConfirmed={handlePaymentConfirmed}
               isConfirmed={paymentConfirmed}
-              phoneNumber={deliveryLocation?.phoneNumber}
             />
           </div>
         )}
