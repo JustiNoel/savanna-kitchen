@@ -86,7 +86,7 @@ Keep responses concise (2-3 sentences max), friendly, and use relevant emojis. S
         model: "google/gemini-3-flash-preview",
         messages: [
           { role: "system", content: systemPrompt },
-          ...messages,
+          ...safeMessages,
         ],
         stream: true,
       }),
