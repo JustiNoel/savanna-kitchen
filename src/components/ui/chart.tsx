@@ -13,6 +13,15 @@ export type ChartConfig = {
   } & ({ color?: string; theme?: never } | { color?: never; theme: Record<keyof typeof THEMES, string> });
 };
 
+type ChartPayloadItem = {
+  value?: number | string;
+  name?: string | number;
+  dataKey?: string | number;
+  color?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  payload?: any;
+};
+
 type ChartContextProps = {
   config: ChartConfig;
 };
