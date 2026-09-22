@@ -164,7 +164,14 @@ const CartSheet = () => {
       orderId = order.id;
     } catch (error) {
       console.error('Order creation error:', error);
-      toast.error('Failed to place order. Please try again.');
+      const message = error instanceof Error ? error.message : '';
+      if (message.includes('payment_reference') || message.includes('duplicate key')) {
+        toast.error('This M-Pesa code has already been used for another order.');
+      } else if (message.includes('confirmation code')) {
+        toast.error('Enter a valid M-Pesa confirmation code from your SMS.');
+      } else {
+        toast.error('Failed to place order. Please try again.');
+      }
       setPaymentConfirmed(false);
       setIsProcessing(false);
       return;
