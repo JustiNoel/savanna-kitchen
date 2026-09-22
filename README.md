@@ -35,16 +35,16 @@ Designed with a mobile-first approach and built as a Progressive Web App (PWA), 
 
 ##  Features
 
-- 🍔 **Multi-category delivery** — food, groceries, retail shopping, and spirits in one platform
-- 🔐 **Authentication** — secure user sign-up, login, and session management via Supabase Auth
-- 🛒 **Cart & Checkout** — smooth add-to-cart flow with real-time cart state management
-- 📱 **Progressive Web App (PWA)** — installable on mobile and desktop, with offline-ready capabilities
-- 📊 **Analytics Dashboard** — interactive charts and data visualizations via Recharts
-- 🎨 **Polished UI** — built with shadcn/ui, Radix UI primitives, and Framer Motion animations
-- 🌗 **Dark / Light Mode** — theme switching powered by `next-themes`
-- ✅ **Form Validation** — robust client-side validation using React Hook Form and Zod schemas
-- ⚡ **Real-time Updates** — live data powered by Supabase real-time subscriptions
-- 🔍 **Product Search & Filtering** — quickly find what you need across all categories
+-  **Multi-category delivery** — food, groceries, retail shopping, and spirits in one platform
+-  **Authentication** — secure user sign-up, login, and session management via Supabase Auth
+-  **Cart & Checkout** — smooth add-to-cart flow with real-time cart state management
+-  **Progressive Web App (PWA)** — installable on mobile and desktop, with offline-ready capabilities
+-  **Analytics Dashboard** — interactive charts and data visualizations via Recharts
+-  **Polished UI** — built with shadcn/ui, Radix UI primitives, and Framer Motion animations
+-  **Dark / Light Mode** — theme switching powered by `next-themes`
+-  **Form Validation** — robust client-side validation using React Hook Form and Zod schemas
+-  **Real-time Updates** — live data powered by Supabase real-time subscriptions
+-  **Product Search & Filtering** — quickly find what you need across all categories
 
 ---
 
