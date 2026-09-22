@@ -126,22 +126,22 @@ const Footer = () => {
             </a>
             <ul className="space-y-2">
               <li>
-                <a href="#menu" className="text-background/70 hover:text-primary transition-colors text-sm">
+                <a href="menu" className="text-background/70 hover:text-primary transition-colors text-sm">
                   🍽️ Food
                 </a>
               </li>
               <li>
-                <a href="#groceries" className="text-background/70 hover:text-primary transition-colors text-sm">
+                <a href="groceries" className="text-background/70 hover:text-primary transition-colors text-sm">
                   🥕 Groceries
                 </a>
               </li>
               <li>
-                <a href="#shop" className="text-background/70 hover:text-primary transition-colors text-sm">
+                <a href="shop" className="text-background/70 hover:text-primary transition-colors text-sm">
                   🏪 Shop
                 </a>
               </li>
               <li>
-                <a href="#spirits" className="text-background/70 hover:text-primary transition-colors text-sm">
+                <a href="spirits" className="text-background/70 hover:text-primary transition-colors text-sm">
                   🍾 Spirits
                 </a>
               </li>
@@ -156,7 +156,7 @@ const Footer = () => {
           </p>
           <div className="flex items-center gap-4">
             <span className="text-2xl">🇰🇪</span>
-            <span className="text-background/50 text-sm">Made with ❤️ in Kenya</span>
+            <span className="text-background/50 text-sm">N.J</span>
           </div>
         </div>
       </div>
