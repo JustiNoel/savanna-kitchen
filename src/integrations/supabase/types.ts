@@ -1036,6 +1036,7 @@ export type Database = {
           comment: string | null
           created_at: string
           id: string
+          is_published: boolean
           rating: number
           reviewer_name: string
           user_id: string | null
@@ -1044,6 +1045,7 @@ export type Database = {
           comment?: string | null
           created_at?: string
           id?: string
+          is_published?: boolean
           rating: number
           reviewer_name: string
           user_id?: string | null
@@ -1052,6 +1054,7 @@ export type Database = {
           comment?: string | null
           created_at?: string
           id?: string
+          is_published?: boolean
           rating?: number
           reviewer_name?: string
           user_id?: string | null
