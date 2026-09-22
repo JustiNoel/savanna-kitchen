@@ -125,13 +125,26 @@ const CustomCategoriesRow = () => {
                 background: `linear-gradient(135deg, ${cat.color}20, ${cat.color}05)`,
               }}
             >
-              <CardContent className="p-4 text-center space-y-3">
-                <div
-                  className="mx-auto h-16 w-16 rounded-2xl flex items-center justify-center shadow-md"
-                  style={{ backgroundColor: `${cat.color}30`, color: cat.color }}
-                >
-                  {renderIcon(cat.icon, cat.color, 32)}
+              {cat.image_url && (
+                <div className="relative w-full h-28 md:h-36 overflow-hidden">
+                  <img
+                    src={cat.image_url}
+                    alt={`${cat.name} category`}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
                 </div>
+              )}
+              <CardContent className="p-4 text-center space-y-3">
+                {!cat.image_url && (
+                  <div
+                    className="mx-auto h-16 w-16 rounded-2xl flex items-center justify-center shadow-md"
+                    style={{ backgroundColor: `${cat.color}30`, color: cat.color }}
+                  >
+                    {renderIcon(cat.icon, cat.color, 32)}
+                  </div>
+                )}
                 <div>
                   <h2 className="font-display text-lg md:text-xl font-bold text-foreground">
                     {cat.name}
