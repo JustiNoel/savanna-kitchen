@@ -666,7 +666,7 @@ const Admin = () => {
         }
       }
       
-      const updateData: Record<string, any> = { status };
+      const updateData: { status: string; picked_up_at?: string; delivered_at?: string } = { status };
       
       // Add timestamps based on status
       if (status === 'delivering') {
