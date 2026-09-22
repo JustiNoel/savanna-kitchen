@@ -1224,6 +1224,50 @@ const Admin = () => {
       </header>
 
       <main className="container mx-auto px-4 py-6 sm:py-8">
+        <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {[
+            {
+              label: 'Pending orders',
+              value: (orders || []).filter((o) => o.status === 'pending').length,
+              icon: ShoppingBag,
+            },
+            {
+              label: 'Awaiting payment check',
+              value: (orders || []).filter((o) => o.payment_status !== 'paid' && o.status !== 'cancelled').length,
+              icon: Wallet,
+            },
+            {
+              label: 'Paid today',
+              value: `KSh ${(orders || [])
+                .filter(
+                  (o) =>
+                    o.payment_status === 'paid' &&
+                    new Date(o.created_at).toDateString() === new Date().toDateString()
+                )
+                .reduce((sum, o) => sum + Number(o.total_amount || 0), 0)
+                .toLocaleString()}`,
+              icon: DollarSign,
+            },
+            {
+              label: 'Upcoming reservations',
+              value: (reservations || []).filter((r) => r.status !== 'cancelled').length,
+              icon: CalendarDays,
+            },
+          ].map((stat) => (
+            <Card key={stat.label} className="rounded-xl shadow-sm">
+              <CardContent className="flex items-center gap-3 p-4">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                  <stat.icon className="h-5 w-5 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate text-xs text-muted-foreground">{stat.label}</p>
+                  <p className="truncate text-lg font-bold">{stat.value}</p>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
         <Tabs defaultValue="menu" className="space-y-6">
           <div className="-mx-4 overflow-x-auto px-4 pb-2">
             <TabsList className="inline-flex min-w-max gap-1 rounded-xl p-1 shadow-sm">
