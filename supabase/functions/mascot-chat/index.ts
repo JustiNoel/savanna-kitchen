@@ -35,6 +35,23 @@ serve(async (req) => {
     }
 
     const { messages, mascotType, category } = await req.json();
+
+    // Server owns roles: only user/assistant turns with string content are forwarded
+    const safeMessages = (Array.isArray(messages) ? messages : [])
+      .filter((m: unknown): m is { role: string; content: string } =>
+        !!m && typeof m === "object" &&
+        typeof (m as { content?: unknown }).content === "string" &&
+        ((m as { role?: unknown }).role === "user" || (m as { role?: unknown }).role === "assistant")
+      )
+      .slice(-20)
+      .map((m) => ({ role: m.role === "assistant" ? "assistant" : "user", content: m.content.slice(0, 4000) }));
+
+    if (safeMessages.length === 0) {
+      return new Response(JSON.stringify({ error: "No valid messages provided" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 

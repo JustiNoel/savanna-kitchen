@@ -266,7 +266,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const items = dbItems;
 
-    console.log(`Sending ${type} notification to ${customerEmail} and admin`);
+    console.log(`Sending ${type} notification to customer and admin`);
 
     let customerSubject: string;
     let customerHtml: string;
