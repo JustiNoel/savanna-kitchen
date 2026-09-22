@@ -1,4 +1,4 @@
-# 🛵 Grabbys — Food, Grocery, Shop & Spirits Delivery
+# Grabbys — Food, Grocery, Shop & Spirits Delivery
 
 > A modern, full-featured delivery platform for food, groceries, retail shopping, and spirits — built for speed, accessibility, and a seamless user experience.
 
@@ -10,7 +10,7 @@
 
 ---
 
-## 📖 Table of Contents
+##  Table of Contents
 
 - [Overview](#-overview)
 - [Features](#-features)
@@ -25,7 +25,7 @@
 
 ---
 
-## 🌍 Overview
+##  Overview
 
 **Grabbys** is an all-in-one delivery web application that connects customers with local restaurants, grocery stores, retail shops, and spirits vendors. Users can browse menus and products, add items to their cart, and place orders — all in one place.
 
@@ -33,7 +33,7 @@ Designed with a mobile-first approach and built as a Progressive Web App (PWA), 
 
 ---
 
-## ✨ Features
+##  Features
 
 - 🍔 **Multi-category delivery** — food, groceries, retail shopping, and spirits in one platform
 - 🔐 **Authentication** — secure user sign-up, login, and session management via Supabase Auth
@@ -48,7 +48,7 @@ Designed with a mobile-first approach and built as a Progressive Web App (PWA), 
 
 ---
 
-## 🛠 Tech Stack
+##  Tech Stack
 
 | Layer | Technology |
 |---|---|
@@ -67,7 +67,7 @@ Designed with a mobile-first approach and built as a Progressive Web App (PWA), 
 
 ---
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 grabbys-kitchen/
@@ -89,7 +89,7 @@ grabbys-kitchen/
 
 ---
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### Prerequisites
 
@@ -134,7 +134,7 @@ The app will be available at `http://localhost:5173`.
 
 ---
 
-## 🔑 Environment Variables
+##  Environment Variables
 
 Create a `.env` file in the root directory with the following variables:
 
@@ -147,7 +147,7 @@ You can find these values in your Supabase project under **Project Settings → 
 
 ---
 
-## 🗄 Database
+##  Database
 
 This project uses **Supabase** (PostgreSQL) as its backend. Database schema migrations are located in the `supabase/migrations/` folder and are written in PLpgSQL.
 
@@ -159,7 +159,7 @@ supabase db push
 
 ---
 
-## 🌐 Deployment
+##  Deployment
 
 ### Deploy with Lovable (Recommended)
 
@@ -182,7 +182,7 @@ Make sure to configure your environment variables on the chosen platform.
 
 ---
 
-## 🤝 Contributing
+##  Contributing
 
 Contributions are welcome! Here's how to get started:
 
@@ -196,12 +196,12 @@ Please follow [Conventional Commits](https://www.conventionalcommits.org/) for c
 
 ---
 
-## 📄 License
+##  License
 
 This project is licensed under the **MIT License**. See the [LICENSE](./LICENSE) file for details.
 
 ---
 
 <p align="center">
-  Built with ❤️ by <a href="https://github.com/JustiNoel">JustiNoel</a>
+  Built with  by <a href="https://github.com/JustiNoel">JustiNoel</a>
 </p>
