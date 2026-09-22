@@ -15,7 +15,7 @@ const Footer = () => {
               </h3>
             </div>
             <p className="text-background/70 text-sm leading-relaxed">
-              Your one-stop destination for delicious food, fresh groceries, everyday essentials, and premium spirits. Delivered to your doorstep! 🚀
+              Your one-stop destination for delicious food, fresh groceries, everyday essentials, and premium spirits. Delivered to your doorstep! 
             </p>
           </div>
 
@@ -29,7 +29,7 @@ const Footer = () => {
               </li>
               <li className="flex items-center gap-3 text-background/70 text-sm">
                 <Phone className="h-4 w-4 text-primary flex-shrink-0" />
-                <span>+254 105 686 703</span>
+                <span>+254 752 140 592</span>
               </li>
               <li className="flex items-center gap-3 text-background/70 text-sm">
                 <Mail className="h-4 w-4 text-primary flex-shrink-0" />
@@ -48,14 +48,14 @@ const Footer = () => {
                 <Clock className="h-4 w-4 text-primary flex-shrink-0" />
                 <div>
                   <p className="font-medium text-background">Mon - Fri</p>
-                  <p>7:00 AM - 10:00 PM</p>
+                  <p>7:00 AM - 9:00 PM</p>
                 </div>
               </li>
               <li className="flex items-center gap-3 text-background/70 text-sm">
                 <Clock className="h-4 w-4 text-primary flex-shrink-0" />
                 <div>
                   <p className="font-medium text-background">Sat - Sun</p>
-                  <p>8:00 AM - 11:00 PM</p>
+                  <p>8:00 AM - 10:00 PM</p>
                 </div>
               </li>
             </ul>
