@@ -837,6 +837,7 @@ export type Database = {
           notes: string | null
           order_type: string | null
           payment_method: string | null
+          payment_reference: string | null
           payment_status: string | null
           picked_up_at: string | null
           rider_id: string | null
@@ -859,6 +860,7 @@ export type Database = {
           notes?: string | null
           order_type?: string | null
           payment_method?: string | null
+          payment_reference?: string | null
           payment_status?: string | null
           picked_up_at?: string | null
           rider_id?: string | null
@@ -881,6 +883,7 @@ export type Database = {
           notes?: string | null
           order_type?: string | null
           payment_method?: string | null
+          payment_reference?: string | null
           payment_status?: string | null
           picked_up_at?: string | null
           rider_id?: string | null
