@@ -97,6 +97,8 @@
     "rollup": "^4.63.4",
     "minimatch": "^10.2.6",
     "@isaacs/brace-expansion": "^5.0.1",
-    "@babel/plugin-transform-modules-systemjs": "^8.0.1"
+    "@babel/plugin-transform-modules-systemjs": "^8.0.1",
+    "browserslist": "^4.29.0",
+    "baseline-browser-mapping": "^2.11.0"
   }
 }
